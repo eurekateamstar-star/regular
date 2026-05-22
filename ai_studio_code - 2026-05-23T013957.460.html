@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>常訓系統</title>
+    <!-- 引入 Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- ★ 引入 PDF.js ★ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <style>
+        :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); --header-bg: #f1f5f9; }
+        html, body { margin:0;padding:0; background: var(--header-bg); color:#1e293b; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro TC", "PingFang TC", "Helvetica Neue", "Microsoft JhengHei", sans-serif; height:100%;width:100%; overflow:hidden; overscroll-behavior:none; -webkit-font-smoothing:antialiased; }
+        
+        #app { width:100%; height:100dvh; max-width:450px; margin:0 auto; display:flex; flex-direction:column; position:relative; background:#f1f5f9; box-shadow:0 0 50px rgba(0,0,0,.08); }
+        
+        .font-num { font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+        .list-card { background:#fff;border:1px solid #e2e8f0;border-radius:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,.02);overflow:hidden; }
+        .fade-in { animation:fadeIn .4s cubic-bezier(.16,1,.3,1); }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+        
+        .dashboard-wrapper { flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0; }
+        .tabs-section { flex-shrink:0; background:#f1f5f9; z-index:30; border-bottom: 1px solid #e2e8f0; padding-top: 10px;}
+        .tabs-scroll-container { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 4px 20px 8px 20px; gap: 12px; justify-content: flex-start; }
+        .tab-item { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        
+        .slides-section { flex:1;overflow-y:auto; -webkit-overflow-scrolling:touch; padding: 16px 20px 24px 20px; display: flex; flex-direction: column;}
+        .slides-section::-webkit-scrollbar { display:none; }
+
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4px 0; min-width: 0; cursor: pointer;}
+
+        /* PDF 滑動 CSS */
+        .pdf-slider { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; width: 100%; scrollbar-width: none; background: #fff; }
+        .pdf-slider::-webkit-scrollbar { display: none; }
+        .pdf-page-container { flex: 0 0 100%; scroll-snap-align: center; display: flex; justify-content: center; align-items: center; }
+        .pdf-page-container canvas { width: 100%; height: auto; display: block; background: white; }
+
+        /* ★ 3D 書本動畫專屬 CSS ★ */
+        .book-scene {
+            perspective: 1200px; /* 建立 3D 空間視角 */
+        }
+        .book-body {
+            /* 模擬高密度、薄紙張的陰影演算法 (黑白灰交替，間距縮小) */
+            box-shadow: 
+                1px 0px 0px #fff, 
+                2px 0px 0px #cbd5e1, 
+                3px 0px 0px #fff, 
+                4px 0px 0px #94a3b8, 
+                5px 0px 0px #fff, 
+                6px 0px 0px #64748b, 
+                12px 15px 30px rgba(0,0,0,0.18);
+            transform-style: preserve-3d;
+        }
+        .book-cover {
+            transform-origin: left center;
+            /* 改為平滑的 ease-out，避免蓋上時因回彈導致穿透反白 */
+            transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
+            /* 保持微小的 Z 軸距離，防止與內頁交疊 */
+            transform: translateZ(1px); 
+        }
+        /* 點擊 (active) 或 hover 時掀開封面 */
+        .book-scene:active .book-cover, .book-scene:hover .book-cover {
+            /* 單純向左掀開 25 度，移除多餘的縮放 */
+            transform: rotateY(-25deg) translateZ(1px); 
+            box-shadow: 15px 10px 25px rgba(0,0,0,0.25);
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <!-- Header -->
+    <header :style="{ paddingTop:'calc(1rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">劉</div>
+            <div>
+                <p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p>
+                <h2 class="text-lg font-black text-slate-800">{{ userData.name }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle font-bold">{{ userData.role }}</span></h2>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 active:scale-95 transition-transform"><i class="fa-solid fa-bell text-sm"></i></button>
+            <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-200 active:scale-95 transition-transform"><i class="fa-solid fa-power-off text-sm"></i></button>
+        </div>
+    </header>
+
+    <div class="dashboard-wrapper fade-in">
+        
+        <!-- Tabs -->
+        <div class="tabs-section">
+            <div class="tabs-scroll-container">
+                <div @click="activeTab = 'training'" class="tab-item">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'training' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-clipboard-list text-xl"></i></div>
+                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'training' ? 'text-blue-600' : 'text-slate-400'">常訓資料</span>
+                </div>
+                <div @click="activeTab = 'manual'" class="tab-item">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'manual' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-book-medical text-xl"></i></div>
+                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'manual' ? 'text-blue-600' : 'text-slate-400'">救護手冊</span>
+                </div>
+                <div @click="activeTab = 'skill'" class="tab-item">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'skill' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-kit-medical text-xl"></i></div>
+                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'skill' ? 'text-blue-600' : 'text-slate-400'">單項技術</span>
+                </div>
+                <div @click="activeTab = 'medication'" class="tab-item">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'medication' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-pills text-xl"></i></div>
+                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'medication' ? 'text-blue-600' : 'text-slate-400'">藥物小卡</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 內容區塊 -->
+        <div class="slides-section">
+            
+            <!-- 分頁 1：常訓資料 -->
+            <div v-show="activeTab === 'training'" class="fade-in">
+                <div v-if="trainingStep === 'date'" class="fade-in">
+                    <div class="text-center mb-6">
+                        <h2 class="text-xl font-black text-slate-800 tracking-wider">常訓資料</h2>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">TRAINING DATA</p>
+                    </div>
+                    <div class="list-card p-5 border border-slate-100 shadow-sm">
+                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">選擇常訓月份</p>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button v-for="m in 12" :key="m" @click="selectMonth(m)" class="py-4 rounded-xl text-sm font-black border transition-all active:scale-95" :class="selectedMonth === m ? 'bg-blue-600 text-white border-blue-700 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-blue-50'">{{ m }} 月</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="trainingStep === 'form'" class="fade-in space-y-5">
+                    <div class="text-center mb-6 relative">
+                        <button @click="trainingStep = 'date'" class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 active:scale-95"><i class="fa-solid fa-chevron-left text-xl"></i></button>
+                        <h2 class="text-xl font-black text-slate-800 tracking-wider">訓練記錄</h2>
+                    </div>
+                    <div class="list-card p-5 border border-slate-100 shadow-sm">
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center"><label class="text-sm font-bold text-slate-600">姓名</label><span class="text-base font-black text-slate-800">{{ userData.name }}</span></div>
+                            <div class="flex justify-between items-center"><label class="text-sm font-bold text-slate-600">常訓日期</label><input type="date" v-model="trainingForm.date" class="text-right font-num text-slate-800 bg-transparent border-0 outline-none p-0 cursor-pointer"></div>
+                        </div>
+                    </div>
+                    <div class="list-card p-5 border border-slate-100 shadow-sm">
+                        <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-center gap-4">
+                            <div class="text-center relative"><p class="text-[10px] text-blue-400 font-bold uppercase mb-1">開始時間</p><input type="time" v-model="trainingForm.startTime" class="text-2xl font-num text-blue-600 bg-transparent border-none outline-none text-center w-24 cursor-pointer"></div>
+                            <div class="w-8 h-[2px] bg-blue-200"></div>
+                            <div class="text-center relative"><p class="text-[10px] text-blue-400 font-bold uppercase mb-1">結束時間</p><input type="time" v-model="trainingForm.endTime" class="text-2xl font-num text-blue-600 bg-transparent border-none outline-none text-center w-24 cursor-pointer"></div>
+                        </div>
+                    </div>
+                    <div class="pt-2 pb-6 space-y-3">
+                        <button @click="submitTraining" class="w-full py-4 rounded-xl border-2 border-blue-100 bg-white text-blue-600 font-black text-sm active:scale-[0.98] transition-transform shadow-sm">僅提交常訓時間 (無附件)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ★ 分頁 2：救護手冊 (3D 翻頁動畫版) ★ -->
+            <div v-show="activeTab === 'manual'" class="fade-in flex flex-col h-full">
+                <div class="text-center mb-6 shrink-0">
+                    <h2 class="text-lg font-black text-slate-800 tracking-wider">內政部消防署 <span class="text-blue-600">救護手冊</span></h2>
+                    <p class="text-[11px] font-bold text-slate-400 mt-1"><i class="fa-solid fa-hand-pointer mr-1"></i>點擊下方掀開書本</p>
+                </div>
+                
+                <div class="flex-1 flex flex-col items-center justify-start pt-2 pb-8 overflow-visible">
+                    
+                    <!-- 3D 容器 (點擊觸發開書動畫) -->
+                    <a href="https://ebook.nfa.gov.tw/1140527/mobile/index.html#p=1" target="_blank" rel="noopener noreferrer" 
+                       class="book-scene relative block w-[85%] max-w-[340px] transition-transform duration-300">
+                        
+                        <!-- 書本主體 (包含厚度與第一頁內頁) -->
+                        <div class="book-body relative w-full bg-[#f8fafc] border-l-[3px] border-slate-400 aspect-[1/1.4] rounded-sm">
+                            
+                            <!-- 裡面的第一頁 (打開才看得到) -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-300 z-0" style="transition-delay: 0.1s;">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                                    <i class="fa-solid fa-book-open-reader text-xl text-blue-600"></i>
+                                </div>
+                                <span class="text-xs font-bold text-slate-400 tracking-widest">載入電子書...</span>
+                            </div>
+
+                            <!-- ★ 會翻開的書本封面 ★ -->
+                            <div class="book-cover absolute inset-0 w-full h-full bg-white z-10 overflow-hidden border border-slate-100 rounded-sm">
+                                <!-- 真實封面圖片 -->
+                                <img src="https://ebook.nfa.gov.tw/1140527/files/mobile/1.jpg" alt="救護手冊封面" class="w-full h-full object-cover block">
+                                
+                                <!-- 書脊凹槽立體感 -->
+                                <div class="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black/20 via-black/5 to-transparent mix-blend-multiply"></div>
+                            </div>
+                            
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ★ 分頁 3：單項技術 (3D 翻頁動畫版) ★ -->
+            <div v-show="activeTab === 'skill'" class="fade-in flex flex-col h-full">
+                <div class="text-center mb-6 shrink-0">
+                    <h2 class="text-lg font-black text-slate-800 tracking-wider">內政部消防署 <span class="text-teal-600">單項技術</span></h2>
+                    <p class="text-[11px] font-bold text-slate-400 mt-1"><i class="fa-solid fa-hand-pointer mr-1"></i>點擊下方掀開書本</p>
+                </div>
+                
+                <div class="flex-1 flex flex-col items-center justify-start pt-2 pb-8 overflow-visible">
+                    
+                    <!-- 3D 容器 -->
+                    <a href="https://ebook.nfa.gov.tw/1140526/mobile/index.html#p=1" target="_blank" rel="noopener noreferrer" 
+                       class="book-scene relative block w-[85%] max-w-[340px] transition-transform duration-300">
+                        
+                        <div class="book-body relative w-full bg-[#f8fafc] border-l-[3px] border-slate-400 aspect-[1/1.4] rounded-sm">
+                            
+                            <!-- 裡面的第一頁 -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-300 z-0" style="transition-delay: 0.1s;">
+                                <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-3">
+                                    <i class="fa-solid fa-book-open-reader text-xl text-teal-600"></i>
+                                </div>
+                                <span class="text-xs font-bold text-slate-400 tracking-widest">載入電子書...</span>
+                            </div>
+
+                            <!-- ★ 會翻開的書本封面 ★ -->
+                            <div class="book-cover absolute inset-0 w-full h-full bg-white z-10 overflow-hidden border border-slate-100 rounded-sm">
+                                <img src="https://ebook.nfa.gov.tw/1140526/files/mobile/1.jpg" alt="單項技術封面" class="w-full h-full object-cover block">
+                                
+                                <div class="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black/20 via-black/5 to-transparent mix-blend-multiply"></div>
+                            </div>
+                            
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 分頁 4：藥物小卡 (維持 PDF 左右滑動) -->
+            <div v-show="activeTab === 'medication'" class="fade-in flex flex-col h-full">
+                <div class="text-center mb-2 shrink-0 flex justify-between items-center px-2">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-800 tracking-wider text-left">藥物小卡</h2>
+                    </div>
+                    <div v-if="totalPages > 0" class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-black shadow-sm font-num transition-opacity">
+                        {{ currentPage }} / {{ totalPages }}
+                    </div>
+                </div>
+                
+                <div class="list-card border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div v-if="isPdfLoading" class="min-h-[300px] flex flex-col items-center justify-center bg-slate-50 z-20">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl text-blue-500 mb-3"></i>
+                        <p class="text-sm font-black text-slate-400 tracking-widest">繪製小卡中...</p>
+                    </div>
+                    <div v-if="pdfError" class="min-h-[300px] flex flex-col items-center justify-center bg-slate-50 z-20">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400 mb-3"></i>
+                        <p class="text-sm font-black text-slate-500 mb-2">無法載入，請檢查網路狀態</p>
+                        <button @click="loadPdfFromFirebase" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg text-xs font-bold">重新嘗試</button>
+                    </div>
+                    <div v-show="!isPdfLoading && !pdfError" ref="sliderRef" class="pdf-slider" @scroll="onSliderScroll">
+                        <div v-for="pageNum in totalPages" :key="pageNum" class="pdf-page-container">
+                            <canvas :id="'pdf-canvas-' + pageNum"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Firebase 與 Vue 邏輯 -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q",
+        authDomain: "star-c5e91.firebaseapp.com",
+        projectId: "star-c5e91",
+        storageBucket: "star-c5e91.firebasestorage.app",
+        messagingSenderId: "804810488246",
+        appId: "1:804810488246:web:477340ff049b90ed68e917",
+        measurementId: "G-012J6MZMPB"
+    };
+
+    const fireApp = initializeApp(firebaseConfig);
+    const db = getFirestore(fireApp);
+    const storage = getStorage(fireApp); 
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const { createApp, ref, nextTick, onMounted } = Vue;
+
+    createApp({
+        setup() {
+            const activeTab = ref('training'); 
+            const trainingStep = ref('date');
+
+            const userData = ref({ name: '劉奕昕', role: '幹事' });
+            const selectedMonth = ref(null);
+            
+            const trainingForm = ref({
+                date: new Date().toISOString().split('T')[0],
+                startTime: '08:00',
+                endTime: '12:00'
+            });
+
+            const selectMonth = (month) => {
+                selectedMonth.value = month;
+                const year = new Date().getFullYear();
+                const mStr = String(month).padStart(2, '0');
+                trainingForm.value.date = `${year}-${mStr}-01`;
+                setTimeout(() => { trainingStep.value = 'form'; }, 300);
+            };
+
+            const submitTraining = async () => { /* 表單送出略 */ };
+
+            // PDF 預載邏輯
+            const isPdfLoading = ref(false);
+            const pdfError = ref(false);
+            const totalPages = ref(0);
+            const currentPage = ref(1);
+            const sliderRef = ref(null);
+            let pdfDocument = null;
+            let hasLoaded = false;
+
+            const loadPdfFromFirebase = async () => {
+                if (hasLoaded || isPdfLoading.value) return;
+                
+                isPdfLoading.value = true;
+                pdfError.value = false;
+
+                try {
+                    const fileRef = storageRef(storage, 'medications.pdf');
+                    const downloadUrl = await getDownloadURL(fileRef);
+                    
+                    pdfDocument = await pdfjsLib.getDocument(downloadUrl).promise;
+                    totalPages.value = pdfDocument.numPages;
+                    currentPage.value = 1;
+
+                    await nextTick();
+                    await renderAllPages();
+                    
+                    hasLoaded = true;
+                    isPdfLoading.value = false;
+                } catch (error) {
+                    console.error("載入 PDF 失敗:", error);
+                    isPdfLoading.value = false;
+                    pdfError.value = true;
+                }
+            };
+
+            const renderAllPages = async () => {
+                for (let i = 1; i <= totalPages.value; i++) {
+                    const page = await pdfDocument.getPage(i);
+                    const canvas = document.getElementById(`pdf-canvas-${i}`);
+                    if (!canvas) continue;
+
+                    const context = canvas.getContext('2d');
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext);
+                }
+            };
+
+            const onSliderScroll = () => {
+                if (!sliderRef.value) return;
+                const scrollLeft = sliderRef.value.scrollLeft;
+                const width = sliderRef.value.clientWidth;
+                currentPage.value = Math.round(scrollLeft / width) + 1;
+            };
+
+            onMounted(() => {
+                loadPdfFromFirebase();
+            });
+
+            return {
+                activeTab, trainingStep, userData, selectedMonth, trainingForm, 
+                selectMonth, submitTraining,
+                isPdfLoading, pdfError, loadPdfFromFirebase,
+                totalPages, currentPage, sliderRef, onSliderScroll
+            };
+        }
+    }).mount('#app');
+</script>
+<style>
+    /* 配合動畫，需強制內部文字顯示 */
+    .book-scene:active .absolute.inset-0.opacity-0,
+    .book-scene:hover .absolute.inset-0.opacity-0 {
+        opacity: 1 !important;
+    }
+</style>
+</body>
+</html>
