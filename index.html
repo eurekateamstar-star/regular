@@ -145,40 +145,48 @@
                         </div>
                     </div>
 
-                    <!-- 12 個月卡片 Grid (雙欄) -->
-                    <div v-else class="grid grid-cols-2 gap-3">
-                        <div v-for="item in trainingList" :key="item.id" 
-                             class="list-card p-4 relative training-card"
-                             :class="[item.isLocked && !isAdmin ? 'opacity-60 grayscale-[30%]' : 'active:scale-95 cursor-pointer hover:shadow-md', item.isLocked ? 'opacity-60 grayscale-[30%]' : '']"
-                             @click="openTrainingDetail(item)">
+                   <!-- 12 個月卡片 Grid (雙欄) -->
+                    <div v-else class="grid grid-cols-2 gap-x-3 gap-y-5"> <!-- 增加垂直間距讓標籤有空間 -->
+                        
+                        <!-- 遍歷每一個月份 -->
+                        <div v-for="item in trainingList" :key="item.id" class="relative"> 
                             
-                            <!-- 卡片頂部：小隊 & 狀態 -->
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="text-[10px] px-2 py-1 rounded-md font-bold tracking-widest" :class="item.teamClass">
-                                    {{ item.team }}
+                            <!-- ★ 鮮艷標籤：移到卡片主體外面，不受灰階影響 ★ -->
+                            <div v-if="item.id === nextTrainingId" class="absolute -top-3 -right-1 z-[60] pointer-events-none">
+                                <span class="bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-[0_4px_12px_rgba(220,38,38,0.6)] border border-white animate-pulse whitespace-nowrap">
+                                    下次常訓
                                 </span>
-                                
-                                <div class="flex items-center gap-2">
-                                    <!-- ★ 修正：編輯按鈕用 edit-btn class，並加 @click.stop 阻止冒泡 ★ -->
-                                    <button 
-                                        v-if="isAdmin" 
-                                        class="edit-btn w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-100 hover:text-blue-600 active:scale-95 transition-all"
-                                        @click.stop="openEditTrainingModal(item)">
-                                        <i class="fa-solid fa-pen text-[10px]"></i>
-                                    </button>
-                                    
-                                    <div v-if="!item.isLocked" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
-                                    <i v-else class="fa-solid fa-lock text-slate-300 text-xs"></i>
-                                </div>
                             </div>
-                            
-                            <h3 class="text-2xl font-black text-slate-800 font-num tracking-tight">{{ item.dateStr }}</h3>
-                            <p class="text-[11px] text-slate-400 font-bold mt-1 truncate">{{ item.dayStr }} | {{ item.title }}</p>
-                            
-                            <i v-if="item.isLocked" class="fa-solid fa-lock absolute bottom-4 right-4 text-4xl text-slate-100 opacity-50 pointer-events-none"></i>
+
+                            <!-- 卡片主體 -->
+                            <div class="list-card p-4 relative h-full training-card transition-all"
+                                 :class="[
+                                    (item.isLocked && !isAdmin) ? 'opacity-60 grayscale-[30%] bg-slate-50' : 'active:scale-95 cursor-pointer hover:shadow-md bg-white'
+                                 ]"
+                                 @click="openTrainingDetail(item)">
+                                
+                                <div class="flex justify-between items-start mb-3">
+                                    <span class="text-[10px] px-2 py-1 rounded-md font-bold tracking-widest" :class="item.teamClass">
+                                        {{ item.team }}
+                                    </span>
+                                    
+                                    <div class="flex items-center gap-2">
+                                        <button v-if="isAdmin" class="edit-btn w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-100 hover:text-blue-600 active:scale-95 transition-all" @click.stop="openEditTrainingModal(item)">
+                                            <i class="fa-solid fa-pen text-[10px]"></i>
+                                        </button>
+                                        
+                                        <div v-if="!item.isLocked" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
+                                        <i v-else class="fa-solid fa-lock text-slate-300 text-xs"></i>
+                                    </div>
+                                </div>
+                                
+                                <h3 class="text-2xl font-black text-slate-800 font-num tracking-tight">{{ item.dateStr }}</h3>
+                                <p class="text-[11px] text-slate-400 font-bold mt-1 truncate">{{ item.dayStr }} | {{ item.title }}</p>
+                                
+                                <i v-if="item.isLocked" class="fa-solid fa-lock absolute bottom-4 right-4 text-4xl text-slate-100 opacity-50 pointer-events-none"></i>
+                            </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- 詳情視圖 -->
                 <div v-if="trainingStep === 'detail' && selectedTraining" class="fade-in pb-8">
@@ -495,6 +503,23 @@
             const selectedTraining = ref(null);
             const isTrainingLoading = ref(true);
             const trainingList = ref([]);
+// 約在第 640 行左右
+  const nextTrainingId = computed(() => {
+                const now = new Date();
+                const currentMonth = now.getMonth() + 1; // 1-12
+                const currentDay = now.getDate();
+
+                const thisMonth = trainingList.value.find(t => t.id === currentMonth);
+                if (thisMonth) {
+                    const match = thisMonth.dateStr.match(/(\d+)月(\d+)日/);
+                    if (match && currentDay <= parseInt(match[2])) {
+                        return currentMonth; // 本月訓練還沒到，標註本月
+                    }
+                }
+                return currentMonth < 12 ? currentMonth + 1 : null; // 本月過了，標註下個月
+            });
+
+// 記得要把 nextTrainingId return 出去 (在 return 區塊加上它)
 
             const loadTrainingData = async () => {
                 try {
@@ -521,10 +546,12 @@
                 }
             };
 
+           // 替換原本的 openTrainingDetail，確保鎖定的卡片點不進去
             const openTrainingDetail = (item) => {
-                if (item.isLocked && !isAdmin.value) return;
-                selectedTraining.value = item;
-                trainingStep.value = 'detail';
+                if (isAdmin.value || !item.isLocked) {
+                    selectedTraining.value = item;
+                    trainingStep.value = 'detail';
+                }
             };
 
             // 編輯 Modal 邏輯
@@ -717,7 +744,7 @@
                 membersList, isMembersLoading, membersError, selectedMemberName, userData, switchUser, isAdmin,
                 isTrainingLoading, trainingList, selectedTraining, openTrainingDetail,
                 isEditModalOpen, isSaving, saveToast, editingForm, onTeamChange, onDateChange, openEditTrainingModal, saveTrainingData,
-                onTouchStart, onTouchEnd, 
+                onTouchStart, onTouchEnd, nextTrainingId,
                 isPdfLoading, pdfError, loadPdfFromFirebase,
                 totalPages, currentPage, sliderRef, onSliderScroll
             };
