@@ -127,7 +127,7 @@
             <!-- 分頁 1：常訓資料 -->
             <div v-show="activeTab === 'training'" class="fade-in h-full flex flex-col">
                 
-                <!-- 列表視圖 -->
+                <!-- 列表視圖 (List View) -->
                 <div v-if="trainingStep === 'list'" class="fade-in pb-6">
                     <div class="flex justify-between items-end mb-4 px-1">
                         <div>
@@ -136,7 +136,6 @@
                         </div>
                     </div>
                     
-                    <!-- ★ 載入中骨架 ★ -->
                     <div v-if="isTrainingLoading" class="grid grid-cols-2 gap-3">
                         <div v-for="n in 12" :key="n" class="list-card p-4 animate-pulse">
                             <div class="h-4 bg-slate-100 rounded mb-3 w-16"></div>
@@ -145,20 +144,17 @@
                         </div>
                     </div>
 
-                   <!-- 12 個月卡片 Grid (雙欄) -->
-                    <div v-else class="grid grid-cols-2 gap-x-3 gap-y-5"> <!-- 增加垂直間距讓標籤有空間 -->
-                        
-                        <!-- 遍歷每一個月份 -->
+                    <!-- 12 個月卡片 Grid -->
+                    <div v-else class="grid grid-cols-2 gap-x-3 gap-y-5">
                         <div v-for="item in trainingList" :key="item.id" class="relative"> 
                             
-                            <!-- ★ 鮮艷標籤：移到卡片主體外面，不受灰階影響 ★ -->
-                            <div v-if="item.id === nextTrainingId" class="absolute -top-3 -right-1 z-[60] pointer-events-none">
+                            <!-- 下次常訓標籤：紅色、外掛、不受卡片灰階影響 -->
+                            <div v-if="item.id === nextTrainingId" class="absolute -top-2 -right-1 z-[60] pointer-events-none">
                                 <span class="bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-[0_4px_12px_rgba(220,38,38,0.6)] border border-white animate-pulse whitespace-nowrap">
                                     下次常訓
                                 </span>
                             </div>
 
-                            <!-- 卡片主體 -->
                             <div class="list-card p-4 relative h-full training-card transition-all"
                                  :class="[
                                     (item.isLocked && !isAdmin) ? 'opacity-60 grayscale-[30%] bg-slate-50' : 'active:scale-95 cursor-pointer hover:shadow-md bg-white'
@@ -169,24 +165,21 @@
                                     <span class="text-[10px] px-2 py-1 rounded-md font-bold tracking-widest" :class="item.teamClass">
                                         {{ item.team }}
                                     </span>
-                                    
                                     <div class="flex items-center gap-2">
                                         <button v-if="isAdmin" class="edit-btn w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-100 hover:text-blue-600 active:scale-95 transition-all" @click.stop="openEditTrainingModal(item)">
                                             <i class="fa-solid fa-pen text-[10px]"></i>
                                         </button>
-                                        
                                         <div v-if="!item.isLocked" class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
                                         <i v-else class="fa-solid fa-lock text-slate-300 text-xs"></i>
                                     </div>
                                 </div>
-                                
                                 <h3 class="text-2xl font-black text-slate-800 font-num tracking-tight">{{ item.dateStr }}</h3>
                                 <p class="text-[11px] text-slate-400 font-bold mt-1 truncate">{{ item.dayStr }} | {{ item.title }}</p>
-                                
                                 <i v-if="item.isLocked" class="fa-solid fa-lock absolute bottom-4 right-4 text-4xl text-slate-100 opacity-50 pointer-events-none"></i>
                             </div>
                         </div>
                     </div>
+                </div>
 
                 <!-- 詳情視圖 -->
                 <div v-if="trainingStep === 'detail' && selectedTraining" class="fade-in pb-8">
@@ -203,15 +196,15 @@
                     <!-- 1. 教育訓練卡片 -->
                     <div class="list-card p-5 mb-5 border-t-[5px] border-green-400 relative overflow-hidden shadow-sm">
                         <div class="absolute -right-6 -top-6 w-24 h-24 bg-green-50 rounded-full opacity-50 pointer-events-none"></div>
-                        
+
                         <div class="flex items-center gap-2 mb-3 relative z-10">
                             <span class="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black tracking-widest shadow-sm">教育訓練</span>
                             <span class="text-[11px] font-bold text-slate-400">{{ selectedTraining.training?.tag || '無' }}</span>
                         </div>
-                        
+
                         <h1 class="text-3xl font-black text-slate-800 mb-2 relative z-10 tracking-tight">{{ selectedTraining.training?.title || '未設定標題' }}</h1>
                         <p class="text-sm font-bold text-slate-600 leading-relaxed whitespace-pre-line relative z-10">{{ selectedTraining.training?.content || '無詳細內容' }}</p>
-                        
+
                         <a :href="selectedTraining.training?.link || '#'" target="_blank" class="mt-5 w-full bg-green-50/80 hover:bg-green-100 border border-green-200 py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-colors active:scale-[0.98]">
                             <div class="flex items-center gap-2 text-green-600 font-black text-sm">
                                 <i class="fa-solid fa-link"></i> 開啟訓練教材
@@ -225,7 +218,7 @@
                         <div class="w-1 h-3 bg-blue-500 rounded-full"></div>
                         <h3 class="text-xs font-black text-blue-500 tracking-widest uppercase">Meeting Board</h3>
                     </div>
-                    
+
                     <div class="list-card p-5 shadow-sm">
                         <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
                             <div>
@@ -236,7 +229,7 @@
                                 <i class="fa-solid fa-play"></i> 開始會議簡報
                             </button>
                         </div>
-                        
+
                         <div class="grid grid-cols-2 gap-3">
                             <div class="p-3 bg-amber-50/50 border border-amber-100 rounded-xl">
                                 <h4 class="text-amber-600 text-[11px] font-black mb-1.5 flex items-center gap-1.5"><i class="fa-regular fa-user text-[10px]"></i> 主席報告</h4>
@@ -259,7 +252,6 @@
                 </div>
 
             </div>
-
             <!-- 分頁 2：救護手冊 -->
             <div v-show="activeTab === 'manual'" class="fade-in flex flex-col h-full">
                 <div class="text-center mb-6 shrink-0">
@@ -546,11 +538,14 @@
                 }
             };
 
-           // 替換原本的 openTrainingDetail，確保鎖定的卡片點不進去
-            const openTrainingDetail = (item) => {
+           const openTrainingDetail = (item) => {
+                // 邏輯：如果是管理員或是沒鎖定的卡片，就進入詳情
                 if (isAdmin.value || !item.isLocked) {
                     selectedTraining.value = item;
-                    trainingStep.value = 'detail';
+                    trainingStep.value = 'detail'; // 這一行負責切換視圖
+                } else {
+                    // 如果點擊了鎖定的卡片，可以加個提示或保持原狀
+                    console.log("此月份尚未開放");
                 }
             };
 
