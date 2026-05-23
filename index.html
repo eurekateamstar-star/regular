@@ -704,14 +704,12 @@
                 currentPage.value = Math.round(scrollLeft / width) + 1;
             };
 
-            // 切到藥物小卡時才載入 PDF
-            watch(activeTab, (val) => {
-                if (val === 'medication') loadPdfFromFirebase();
-            });
 
-            onMounted(() => {
+           onMounted(() => {
                 loadMembers();
                 loadTrainingData();
+                // --- 加入下面這一行，讓系統一啟動就預載 PDF ---
+                loadPdfFromFirebase(); 
             });
 
             return {
