@@ -652,7 +652,7 @@
                 isPdfLoading.value = true;
                 pdfError.value = false;
                 try {
-                    const pdfRef = storageRef(storage, 'medication_cards.pdf');
+                    const pdfRef = storageRef(storage, 'medications.pdf');
                     const url = await getDownloadURL(pdfRef);
                     pdfDocument = await pdfjsLib.getDocument(url).promise;
                     totalPages.value = pdfDocument.numPages;
