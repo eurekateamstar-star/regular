@@ -408,12 +408,13 @@
 
     // ★ 請填入你的 Firebase 設定 ★
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        apiKey: "AIzaSyCzXANY8mkN8BzsGr0SDvGLW_AJ43kRQ1Q",
+        authDomain: "star-c5e91.firebaseapp.com",
         projectId: "star-c5e91",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        storageBucket: "star-c5e91.firebasestorage.app",
+        messagingSenderId: "804810488246",
+        appId: "1:804810488246:web:477340ff049b90ed68e917",
+        measurementId: "G-012J6MZMPB"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -652,11 +653,23 @@
                 isPdfLoading.value = true;
                 pdfError.value = false;
                 try {
+                    // 1. 修正檔名：將 'medication_cards.pdf' 改為 'medications.pdf'
                     const pdfRef = storageRef(storage, 'medications.pdf');
+                    
+                    console.log("正在嘗試取得 Firebase 下載網址...");
                     const url = await getDownloadURL(pdfRef);
-                    pdfDocument = await pdfjsLib.getDocument(url).promise;
+                    console.log("成功取得網址:", url);
+
+                    // 2. 載入 PDF
+                    pdfDocument = await pdfjsLib.getDocument({
+                        url: url,
+                        // 增加這行可以避免部分跨網域載入問題
+                        withCredentials: false
+                    }).promise;
+                    
                     totalPages.value = pdfDocument.numPages;
                     await nextTick();
+
                     for (let i = 1; i <= pdfDocument.numPages; i++) {
                         const page = await pdfDocument.getPage(i);
                         const canvas = document.getElementById('pdf-canvas-' + i);
@@ -664,11 +677,21 @@
                         const viewport = page.getViewport({ scale: 2 });
                         canvas.width = viewport.width;
                         canvas.height = viewport.height;
-                        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                        await page.render({ 
+                            canvasContext: canvas.getContext('2d'), 
+                            viewport: viewport 
+                        }).promise;
                     }
+                    console.log("PDF 所有頁面渲染完成");
                 } catch (err) {
-                    console.error('PDF 載入失敗:', err);
+                    console.error('PDF 載入詳細失敗原因:', err);
                     pdfError.value = true;
+                    // 如果報錯是 Retry limit exceeded，通常是 config 或 file 協議問題
+                    if (err.code === 'storage/retry-limit-exceeded') {
+                        alert("連線超時：請確認您的 firebaseConfig 設定是否正確，或嘗試將檔案上傳到 GitHub Pages (HTTPS 環境) 執行。");
+                    } else {
+                        alert("載入失敗：" + err.message);
+                    }
                 } finally {
                     isPdfLoading.value = false;
                 }
