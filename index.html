@@ -145,27 +145,37 @@
         
         <!-- Tabs -->
         <div class="tabs-section">
-            <div class="tabs-scroll-container">
-                <div @click="activeTab = 'training'" class="tab-item">
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'training' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-clipboard-list text-xl"></i></div>
-                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'training' ? 'text-blue-600' : 'text-slate-400'">常訓資料</span>
-                </div>
-                <div @click="activeTab = 'manual'" class="tab-item">
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'manual' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-book-medical text-xl"></i></div>
-                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'manual' ? 'text-blue-600' : 'text-slate-400'">救護手冊</span>
-                </div>
-                <div @click="activeTab = 'skill'" class="tab-item">
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'skill' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-kit-medical text-xl"></i></div>
-                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'skill' ? 'text-blue-600' : 'text-slate-400'">單項技術</span>
-                </div>
-                <div @click="activeTab = 'medication'" class="tab-item">
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'medication' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-pills text-xl"></i></div>
-                    <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'medication' ? 'text-blue-600' : 'text-slate-400'">藥物小卡</span>
-                </div>
-            </div>
+           <div class="tabs-scroll-container">
+    <!-- 1. 常訓資料 (藍色) -->
+    <div @click="activeTab = 'training'" class="tab-item">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'training' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-clipboard-list text-xl"></i></div>
+        <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'training' ? 'text-blue-600' : 'text-slate-400'">常訓資料</span>
+    </div>
+
+    <!-- 2. 救護手冊 (綠色 emerald) -->
+    <div @click="activeTab = 'manual'" class="tab-item">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'manual' ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-book-medical text-xl"></i></div>
+        <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'manual' ? 'text-emerald-500' : 'text-slate-400'">救護手冊</span>
+    </div>
+
+   <!-- 3. 單項技術 (橘色 orange) -->
+    <div @click="activeTab = 'skill'" class="tab-item">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'skill' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-kit-medical text-xl"></i></div>
+        <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'skill' ? 'text-orange-500' : 'text-slate-400'">單項技術</span>
+    </div>
+
+    <!-- 4. 藥物小卡 (紅色 red) -->
+    <div @click="activeTab = 'medication'" class="tab-item">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeTab === 'medication' ? 'bg-red-500 text-white shadow-md' : 'bg-white text-slate-300 border border-slate-100'"><i class="fa-solid fa-pills text-xl"></i></div>
+        <span class="text-[11px] font-black whitespace-nowrap" :class="activeTab === 'medication' ? 'text-red-500' : 'text-slate-400'">藥物小卡</span>
+    </div>
+</div>
         </div>
 
-        <div class="slides-section" :class="{'!p-0': activeTab === 'medication'}"> 
+        <div class="slides-section" 
+     :class="{'!p-0': activeTab === 'medication'}"
+     @touchstart="handleTouchStart"
+     @touchend="handleTouchEnd"> 
             
             <!-- 分頁 1：常訓資料 -->
             <div v-show="activeTab === 'training'" class="fade-in h-full flex flex-col">
@@ -281,7 +291,7 @@
             <!-- 分頁 2：救護手冊 -->
             <div v-show="activeTab === 'manual'" class="fade-in flex flex-col h-full">
                 <div class="text-center mb-6 shrink-0">
-                    <h2 class="text-lg font-black text-slate-800 tracking-wider">內政部消防署 <span class="text-blue-600">救護手冊</span></h2>
+                    <h2 class="text-lg font-black text-slate-800 tracking-wider">內政部消防署 <span class="text-emerald-500">救護手冊</span></h2>
                     <p class="text-[11px] font-bold text-slate-400 mt-1"><i class="fa-solid fa-hand-pointer mr-1"></i>點擊下方掀開書本</p>
                 </div>
                 <div class="flex-1 flex flex-col items-center justify-start pt-2 pb-8 overflow-visible">
@@ -298,7 +308,7 @@
             <!-- 分頁 3：單項技術 -->
             <div v-show="activeTab === 'skill'" class="fade-in flex flex-col h-full">
                 <div class="text-center mb-6 shrink-0">
-                    <h2 class="text-lg font-black text-slate-800 tracking-wider">內政部消防署 <span class="text-teal-600">單項技術</span></h2>
+                    <h2 class="text-lg font-black text-slate-800 tracking-wider">內政部消防署 <span class="text-orange-500">單項技術</span></h2>
                     <p class="text-[11px] font-bold text-slate-400 mt-1"><i class="fa-solid fa-hand-pointer mr-1"></i>點擊下方掀開書本</p>
                 </div>
                 <div class="flex-1 flex flex-col items-center justify-start pt-2 pb-8 overflow-visible">
@@ -316,9 +326,9 @@
             <div v-show="activeTab === 'medication'" class="fade-in flex flex-col h-full w-full">
                 <div class="text-center mb-2 shrink-0 flex justify-between items-center pt-4 px-4">
                     <h2 class="text-xl font-black text-slate-800 tracking-wider text-left">藥物小卡</h2>
-                    <div v-if="totalPages > 0" class="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-black shadow-sm font-num transition-opacity">
-                        {{ currentPage }} / {{ totalPages }}
-                    </div>
+                    <div v-if="totalPages > 0" class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-black shadow-sm font-num transition-opacity">
+    {{ currentPage }} / {{ totalPages }}
+</div>
                 </div>
                 <div class="relative w-full shrink-0 flex flex-col justify-start pb-6">
                     <div v-if="isPdfLoading" class="min-h-[300px] flex flex-col items-center justify-center z-20">
@@ -1187,6 +1197,50 @@ const availableYears = computed(() => {
     }
     return years;
 });
+
+
+
+// --- 左右滑動切換分頁邏輯 ---
+            const tabsOrder = ['training', 'manual', 'skill', 'medication'];
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            const handleTouchStart = (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            };
+
+            const handleTouchEnd = (e) => {
+                // 如果有開啟任何蓋住畫面的 Modal 或 PPT，不執行滑動切換
+                if (isPptOpen.value || isEditModalOpen.value || isAwardOpen.value) return;
+
+                // 避免與「藥物小卡」的 PDF 左右滑動翻頁衝突
+                // 如果手指觸摸的目標在 PDF 輪播圖內，就不執行分頁切換
+                if (e.target.closest('.pdf-slider')) return;
+
+                const touchEndX = e.changedTouches[0].screenX;
+                const touchEndY = e.changedTouches[0].screenY;
+
+                const deltaX = touchEndX - touchStartX;
+                const deltaY = touchEndY - touchStartY;
+
+                // 判斷是否為水平滑動 (X位移大於Y位移，且滑動距離大於 50px 才觸發)
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                    const currentIndex = tabsOrder.indexOf(activeTab.value);
+
+                    if (deltaX < 0) {
+                        // 向左滑動 (前往下一個分頁)
+                        if (currentIndex < tabsOrder.length - 1) {
+                            activeTab.value = tabsOrder[currentIndex + 1];
+                        }
+                    } else {
+                        // 向右滑動 (前往上一個分頁)
+                        if (currentIndex > 0) {
+                            activeTab.value = tabsOrder[currentIndex - 1];
+                        }
+                    }
+                }
+            };
             const membersList = ref([]);
             const isMembersLoading = ref(true);
             const membersError = ref('');
@@ -1634,7 +1688,8 @@ const onSliderScroll = (e) => {
                 isPptOpen, danmakus, startPresentation, closePpt, triggerDanmaku,
                 pptMonth, coverHexagons, pptBirthdays, pptBirthdayRange, onSliderScroll,isNotCurrentYear, 
                 pptTeamItems, pptPolicyItems, pptAdhocItems,loadPdf,selectedYear,availableYears,
-    changeYear,openSections,
+    changeYear,openSections,handleTouchStart,
+                handleTouchEnd,
     toggleSection,
                 detailTeamSummary, detailPolicySummary, detailAdhocSummary,
                 isAwardOpen, awardData, showAward, closeAward,
