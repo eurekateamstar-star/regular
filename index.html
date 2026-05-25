@@ -1329,19 +1329,30 @@ const toggleSection = (name) => {
                 return 'text-slate-200';
             };
 
-            const loadMembers = async () => {
-                try {
-                    isMembersLoading.value = true;
-                    const snapshot = await getDocs(collection(db, 'members'));
-                    const list = [];
-                    snapshot.forEach(docSnap => { list.push({ 姓名: docSnap.id, ...docSnap.data() }); });
-                    membersList.value = list;
-                    const saved = localStorage.getItem('selectedMember');
-                    if (saved && list.find(m => m.姓名 === saved)) { selectedMemberName.value = saved; } 
-                    else if (list.length > 0) { selectedMemberName.value = list[0].姓名; }
-                } catch (err) { membersError.value = '人員載入失敗'; } 
-                finally { isMembersLoading.value = false; }
-            };
+           const loadMembers = async () => {
+    try {
+        isMembersLoading.value = true;
+        const snapshot = await getDocs(collection(db, 'members'));
+        const list = [];
+        snapshot.forEach(docSnap => { list.push({ 姓名: docSnap.id, ...docSnap.data() }); });
+        membersList.value = list;
+
+        // 👇 新增：從網址抓取主系統傳過來的名字
+        const urlParams = new URLSearchParams(window.location.search);
+        const userFromUrl = urlParams.get('user');
+
+        if (userFromUrl && list.find(m => m.姓名 === userFromUrl)) {
+            // 如果主系統有傳名字過來，就強制鎖定這個名字
+            selectedMemberName.value = userFromUrl;
+        } else {
+            // 如果沒有傳，就照舊抓以前紀錄的
+            const saved = localStorage.getItem('selectedMember');
+            if (saved && list.find(m => m.姓名 === saved)) { selectedMemberName.value = saved; } 
+            else if (list.length > 0) { selectedMemberName.value = list[0].姓名; }
+        }
+    } catch (err) { membersError.value = '人員載入失敗'; } 
+    finally { isMembersLoading.value = false; }
+};
 
             const missionColors = ['from-cyan-400 to-blue-600', 'from-emerald-400 to-teal-600', 'from-orange-400 to-amber-600', 'from-rose-400 to-pink-600', 'from-purple-400 to-violet-600'];
             const userData = computed(() => membersList.value.find(m => m.姓名 === selectedMemberName.value) || null);
