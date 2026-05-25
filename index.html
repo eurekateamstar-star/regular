@@ -105,14 +105,14 @@
             </div>
             <div class="relative cursor-pointer">
                 <p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p>
-                <h2 class="text-lg font-black text-slate-800 flex items-center gap-1">
-                    <span v-if="isMembersLoading" class="text-slate-400 text-sm">載入中...</span>
-                    <span v-else>{{ userData?.姓名 || '請選擇' }}</span>
-                    <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full align-middle font-bold">
-                        {{ userData?.duty_title || '隊員' }}
-                    </span>
-                    <i class="fa-solid fa-caret-down text-[10px] text-slate-300 ml-1"></i>
-                </h2>
+               <h2 class="text-lg font-black text-slate-800">
+    <span v-if="isMembersLoading" class="text-slate-400 text-sm">載入中...</span>
+    <span v-else>{{ userData?.姓名 || '請選擇' }}</span>
+    <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle font-bold">
+        {{ userData?.duty_title || '隊員' }}
+    </span>
+    <i class="fa-solid fa-caret-down text-[10px] text-slate-300 ml-1 align-middle"></i>
+</h2>
                 <select v-model="selectedMemberName" @change="switchUser" class="absolute inset-0 opacity-0 cursor-pointer w-full" :disabled="isMembersLoading">
                     <option v-for="m in membersList" :key="m.姓名" :value="m.姓名">{{ m.姓名 }} ({{ m.duty_title || '隊員' }})</option>
                 </select>
