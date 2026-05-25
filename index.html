@@ -103,18 +103,15 @@
             <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">
                 {{ userData?.姓名?.charAt(0) || '無' }}
            <div>
-    <p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p>
-    <h2 class="text-lg font-black text-slate-800">
-        <span v-if="isMembersLoading" class="text-slate-400 text-sm">載入中...</span>
-        <span v-else>{{ userData?.姓名 || '請選擇' }}</span>
-        <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle font-bold">
-            {{ userData?.duty_title || '隊員' }}
-        </span>
-    </h2>
-</div>
-                <select v-model="selectedMemberName" @change="switchUser" class="absolute inset-0 opacity-0 cursor-pointer w-full" :disabled="isMembersLoading">
-                    <option v-for="m in membersList" :key="m.姓名" :value="m.姓名">{{ m.姓名 }} ({{ m.duty_title || '隊員' }})</option>
-                </select>
+    <div>
+                <p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p>
+                <h2 class="text-lg font-black text-slate-800">
+                    <span v-if="isMembersLoading" class="text-slate-400 text-sm">載入中...</span>
+                    <span v-else>{{ userData?.姓名 || '讀取中' }}</span>
+                    <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle font-bold">
+                        {{ userData?.duty_title || '隊員' }}
+                    </span>
+                </h2>
             </div>
         </div>
         <div v-if="membersError" class="absolute top-full left-0 right-0 mx-4 mt-1 bg-red-50 border border-red-200 text-red-600 text-[10px] font-bold px-3 py-2 rounded-xl z-50 leading-snug">
