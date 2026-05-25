@@ -91,10 +91,11 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+ [v-cloak] { display: none !important; }
     </style>
 </head>
 <body>
-<div id="app">
+<div id="app" v-cloak>
 
     <!-- Header -->
     <header :style="{ paddingTop:'calc(1rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50 relative">
@@ -1422,13 +1423,88 @@
                 editingForm.value.dateStr = month + '月' + day + '日';
                 editingForm.value.dayStr = ['(日)', '(一)', '(二)', '(三)', '(四)', '(五)', '(六)'][d.getDay()];
             };
+// --- 藥物小卡預載邏輯 ---
+const loadPdf = async () => {
+    // 預防重複執行
+    if (isPdfLoading.value || totalPages.value > 0) return;
+    
+    isPdfLoading.value = true;
+    pdfError.value = false;
+    
+    try {
+        // 1. 取得下載網址
+        const pdfFileRef = storageRef(storage, 'medications.pdf');
+        const url = await getDownloadURL(pdfFileRef);
+        
+        // 2. 背景下載 PDF
+        const loadingTask = pdfjsLib.getDocument(url);
+        const pdf = await loadingTask.promise;
+        totalPages.value = pdf.numPages;
 
+        // 務必等待 DOM 節點生成 (因為 v-show 的關係，節點已存在)
+        await nextTick();
+
+        // 3. 開始背景渲染
+        // 我們先快速渲染前 2 頁，讓使用者點開時立刻有東西看
+        // 剩下的頁數在背景慢慢畫
+        for (let i = 1; i <= pdf.numPages; i++) {
+            await renderPage(pdf, i);
+            
+            // 每畫完一頁，給瀏覽器喘息時間 (避免畫面卡住)
+            if (i === 2) {
+                // 前兩頁畫完，標記載入完成，讓轉圈圈消失
+                isPdfLoading.value = false;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100)); 
+        }
+    } catch (err) {
+        console.error("預載 PDF 失敗:", err);
+        pdfError.value = true;
+        isPdfLoading.value = false;
+    }
+};
+
+// 輔助繪製函數：優化清晰度
+const renderPage = async (pdf, pageNum) => {
+    try {
+        const page = await pdf.getPage(pageNum);
+        const canvas = document.getElementById(`pdf-canvas-${pageNum}`);
+        if (!canvas) return;
+
+        const context = canvas.getContext('2d');
+        // 根據螢幕寬度調整，設定 scale 為 1.5 ~ 2 兼顧清晰度與速度
+        const viewport = page.getViewport({ scale: 1.8 });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
+    } catch (e) {
+        console.warn(`第 ${pageNum} 頁繪製失敗`);
+    }
+};
+
+const onSliderScroll = (e) => {
+    const container = e.target;
+    const scrollLeft = container.scrollLeft;
+    const width = container.offsetWidth;
+    if (width > 0) {
+        currentPage.value = Math.round(scrollLeft / width) + 1;
+    }
+};
             const totalPages = ref(0);
             const currentPage = ref(1);
             const isPdfLoading = ref(false);
             const pdfError = ref(false);
 
-            onMounted(() => { loadMembers(); loadTrainingData(); });
+            onMounted(() => {
+    loadMembers();
+    loadTrainingData();
+    loadPdf(); // <--- 網頁一打開就直接開始下載預載
+});
 
             return {
                 activeTab, trainingStep, membersList, isMembersLoading, membersError, selectedMemberName, userData, switchUser, isAdmin,
@@ -1436,8 +1512,8 @@
                 isTrainingLoading, trainingList, selectedTraining, nextTrainingId, openTrainingDetail,
                 isEditModalOpen, isSaving, saveToast, editingForm, openEditTrainingModal, saveTrainingData,
                 isPptOpen, danmakus, startPresentation, closePpt, triggerDanmaku,
-                pptMonth, coverHexagons, pptMockData,
-                pptTeamItems, pptPolicyItems, pptAdhocItems,
+                pptMonth, coverHexagons, pptMockData,onSliderScroll,
+                pptTeamItems, pptPolicyItems, pptAdhocItems,loadPdf,
                 detailTeamSummary, detailPolicySummary, detailAdhocSummary,
                 isAwardOpen, awardData, showAward, closeAward,
                 monthlyMissions, dynamicRosterGroups, missionColors,
