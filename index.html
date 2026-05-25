@@ -125,16 +125,23 @@
             <div v-if="isAdmin" class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shadow-sm border border-amber-200">
                 <i class="fa-solid fa-crown text-sm"></i>
             </div>
-           <div class="relative">
+           <!-- 找到這段代碼並修改 -->
+<div class="relative">
     <div class="relative">
-    <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm border border-slate-200 active:scale-95 transition-transform">
-        <i class="fa-solid fa-calendar-check text-sm"></i>
-    </button>
-    <select v-model="selectedYear" @change="changeYear" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-        <option v-for="y in availableYears" :key="y" :value="y">{{ y }} 年度</option>
-    </select>
-</div>
+        <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm border border-slate-200 active:scale-95 transition-transform">
+            <i class="fa-solid fa-calendar-check text-sm"></i>
+        </button>
+        
+        <!-- 新增：非當前年份的紅點提醒 -->
+        <div v-if="isNotCurrentYear" class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-[#f1f5f9] z-20 flex items-center justify-center">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
         </div>
+
+        <select v-model="selectedYear" @change="changeYear" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+            <option v-for="y in availableYears" :key="y" :value="y">{{ y }} 年度</option>
+        </select>
+    </div>
+</div>
     </header>
 
     <div class="dashboard-wrapper fade-in">
@@ -168,10 +175,15 @@
                 <div v-if="trainingStep === 'list'" class="fade-in pb-6">
                     <div class="flex justify-between items-end mb-4 px-1">
                         <div>
-                            <h2 class="text-2xl font-black text-slate-800 tracking-wider">常訓日期</h2>
-                            <!-- 找這行改成這樣 -->
-<p class="text-[11px] font-bold text-slate-400 mt-1 uppercase">{{ selectedYear }} 年度訓練計畫</p>
-                        </div>
+    <h2 class="text-2xl font-black text-slate-800 tracking-wider flex items-center gap-2">
+        常訓日期
+        <!-- 如果不是今年，額外顯示一個紅色的年份標籤 -->
+        <span v-if="isNotCurrentYear" class="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-md animate-pulse">
+            {{ selectedYear }} 舊資料
+        </span>
+    </h2>
+    <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase">{{ selectedYear }} 年度訓練計畫</p>
+</div>
                     </div>
                     
                     <div v-if="isTrainingLoading" class="grid grid-cols-2 gap-3">
@@ -350,20 +362,26 @@
         </div>
 
         <div class="modal-scroll-area space-y-4 pr-1 text-left">
-            <!-- 解鎖狀態 -->
+    
+    <!-- 1. 基本資料區塊 -->
+    <div class="border-b border-slate-100 pb-2">
+        <div @click="toggleSection('basic')" class="flex justify-between items-center cursor-pointer py-2">
+            <h5 class="text-[14px] font-black text-slate-700"><i class="fa-solid fa-circle-info mr-2"></i>基本資料</h5>
+            <i class="fa-solid text-slate-400 text-xs" :class="openSections.includes('basic') ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        
+        <div v-show="openSections.includes('basic')" class="space-y-4 pt-2 pb-4 fade-in">
+            <!-- 原本的解鎖、小隊、日期、標題放在這 -->
             <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <span class="text-[13px] font-black text-slate-700">月份解鎖狀態</span>
                 <button @click="editingForm.isLocked = !editingForm.isLocked" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-colors" :class="editingForm.isLocked ? 'bg-slate-200 text-slate-500' : 'bg-red-100 text-red-600'">
-                    <i class="fa-solid mr-1" :class="editingForm.isLocked ? 'fa-lock' : 'fa-unlock'"></i>
                     {{ editingForm.isLocked ? '已鎖定' : '已開放' }}
                 </button>
             </div>
-
-            <!-- 基本資料 -->
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="text-[10px] font-black text-slate-400 ml-1">小隊</label>
-                    <select v-model="editingForm.team" @change="onTeamChange" class="med-input mt-1 cursor-pointer">
+                    <select v-model="editingForm.team" @change="onTeamChange" class="med-input mt-1">
                         <option value="第一小隊">第一小隊</option>
                         <option value="第二小隊">第二小隊</option>
                         <option value="第三小隊">第三小隊</option>
@@ -371,138 +389,146 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-black text-slate-400 ml-1">日期</label>
-                    <input v-model="editingForm.rawDate" type="date" @change="onDateChange" class="med-input mt-1 cursor-pointer">
+                    <input v-model="editingForm.rawDate" type="date" @change="onDateChange" class="med-input mt-1">
                 </div>
             </div>
-            <div><label class="text-[10px] font-black text-slate-400 ml-1">列表顯示標題</label><input v-model="editingForm.title" type="text" class="med-input w-full mt-1"></div>
+            <div><label class="text-[10px] font-black text-slate-400 ml-1">列表標題</label><input v-model="editingForm.title" type="text" class="med-input w-full mt-1"></div>
+        </div>
+    </div>
 
-            <!-- 教育訓練 -->
-            <div class="border-t border-slate-200 pt-3">
-                <h5 class="text-[12px] font-black text-green-600 mb-2"><i class="fa-solid fa-book-medical mr-1"></i>教育訓練</h5>
-                <div class="space-y-3">
-                    <div><label class="text-[10px] font-black text-slate-400 ml-1">標籤 (Tag)</label><input v-model="editingForm.training.tag" type="text" class="med-input w-full mt-1"></div>
-                    <div><label class="text-[10px] font-black text-slate-400 ml-1">主標題</label><input v-model="editingForm.training.title" type="text" class="med-input w-full mt-1"></div>
-                    <div><label class="text-[10px] font-black text-slate-400 ml-1">訓練內容</label><textarea v-model="editingForm.training.content" class="med-input w-full mt-1 h-20"></textarea></div>
-                    <div><label class="text-[10px] font-black text-slate-400 ml-1">教材連結網址</label><input v-model="editingForm.training.link" type="text" class="med-input w-full mt-1"></div>
+    <!-- 2. 教育訓練區塊 -->
+    <div class="border-b border-slate-100 pb-2">
+        <div @click="toggleSection('training')" class="flex justify-between items-center cursor-pointer py-2">
+            <h5 class="text-[14px] font-black text-green-600"><i class="fa-solid fa-book-medical mr-2"></i>教育訓練</h5>
+            <i class="fa-solid text-slate-400 text-xs" :class="openSections.includes('training') ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        
+        <div v-show="openSections.includes('training')" class="space-y-3 pt-2 pb-4 fade-in">
+            <div><label class="text-[10px] font-black text-slate-400 ml-1">標籤 (Tag)</label><input v-model="editingForm.training.tag" type="text" class="med-input w-full mt-1"></div>
+            <div><label class="text-[10px] font-black text-slate-400 ml-1">主標題</label><input v-model="editingForm.training.title" type="text" class="med-input w-full mt-1"></div>
+            <div><label class="text-[10px] font-black text-slate-400 ml-1">訓練內容</label><textarea v-model="editingForm.training.content" class="med-input w-full mt-1 h-20"></textarea></div>
+            <div><label class="text-[10px] font-black text-slate-400 ml-1">教材連結</label><input v-model="editingForm.training.link" type="text" class="med-input w-full mt-1"></div>
+        </div>
+    </div>
+
+    <!-- 3. 月例會報告區塊 -->
+    <div class="border-b border-slate-100 pb-2">
+        <div @click="toggleSection('meeting')" class="flex justify-between items-center cursor-pointer py-2">
+            <h5 class="text-[14px] font-black text-blue-600"><i class="fa-solid fa-users-rectangle mr-2"></i>月例會報告</h5>
+            <i class="fa-solid text-slate-400 text-xs" :class="openSections.includes('meeting') ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        
+        <div v-show="openSections.includes('meeting')" class="space-y-4 pt-2 pb-4 fade-in">
+    <!-- 主席報告 -->
+    <div><label class="text-[10px] font-black text-slate-400 ml-1">主席報告</label><textarea v-model="editingForm.meeting.chairman" class="med-input w-full mt-1 h-12"></textarea></div>
+    
+    <!-- 報告區塊 1/2/3 -->
+    <div class="pt-2 border-t border-slate-100 mt-2">
+        <label class="text-[10px] font-black text-slate-400 ml-1">報告區塊 1 (左)</label>
+        <div class="flex gap-2 mt-1">
+            <input v-model="editingForm.meeting.c1Title" placeholder="標題" class="med-input w-1/3">
+            <input v-model="editingForm.meeting.c1Text" placeholder="內容" class="med-input w-2/3">
+        </div>
+    </div>
+    <div class="pt-2 border-t border-slate-100">
+        <label class="text-[10px] font-black text-slate-400 ml-1">報告區塊 2 (中)</label>
+        <div class="flex gap-2 mt-1">
+            <input v-model="editingForm.meeting.c2Title" placeholder="標題" class="med-input w-1/3">
+            <input v-model="editingForm.meeting.c2Text" placeholder="內容" class="med-input w-2/3">
+        </div>
+    </div>
+    <div class="pt-2 border-t border-slate-100">
+        <label class="text-[10px] font-black text-slate-400 ml-1">報告區塊 3 (右)</label>
+        <div class="flex gap-2 mt-1">
+            <input v-model="editingForm.meeting.c3Title" placeholder="標題" class="med-input w-1/3">
+            <input v-model="editingForm.meeting.c3Text" placeholder="內容" class="med-input w-2/3">
+        </div>
+    </div>
+
+    <!-- ===== 隊務報告 動態條列 ===== -->
+    <div class="pt-3 border-t border-slate-100">
+        <div class="flex items-center justify-between mb-2">
+            <label class="text-[10px] font-black text-rose-500 ml-1 flex items-center gap-1">
+                <i class="fa-solid fa-clipboard-list text-[10px]"></i> 隊務報告
+            </label>
+            <span class="text-[9px] text-slate-400 font-bold">{{ editingForm.meeting.teamItems?.length || 0 }} 點</span>
+        </div>
+        <div class="space-y-2">
+            <div v-for="(item, idx) in editingForm.meeting.teamItems" :key="'team-'+idx" class="item-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="item-num bg-rose-100 text-rose-600">{{ idx + 1 }}</div>
+                    <input v-model="item.title" placeholder="小標題" class="med-input flex-1 !py-2 !text-[13px]">
+                    <button @click.stop="editingForm.meeting.teamItems.splice(idx,1)" class="del-btn">
+                        <i class="fa-solid fa-minus text-[10px]"></i>
+                    </button>
                 </div>
-            </div>
-
-            <!-- 月例會報告 -->
-            <div class="border-t border-slate-200 pt-3">
-                <h5 class="text-[12px] font-black text-blue-600 mb-2"><i class="fa-solid fa-users-rectangle mr-1"></i>月例會報告</h5>
-                <div class="space-y-3">
-
-                    <!-- 主席報告 -->
-                    <div><label class="text-[10px] font-black text-slate-400 ml-1">主席報告</label><textarea v-model="editingForm.meeting.chairman" class="med-input w-full mt-1 h-12"></textarea></div>
-                    
-                    <!-- 報告區塊 1/2/3 -->
-                    <div class="pt-2 border-t border-slate-100 mt-2">
-                        <label class="text-[10px] font-black text-slate-400 ml-1">報告區塊 1 (左)</label>
-                        <div class="flex gap-2 mt-1">
-                            <input v-model="editingForm.meeting.c1Title" placeholder="標題" class="med-input w-1/3">
-                            <input v-model="editingForm.meeting.c1Text" placeholder="內容" class="med-input w-2/3">
-                        </div>
-                    </div>
-                    <div class="pt-2 border-t border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 ml-1">報告區塊 2 (中)</label>
-                        <div class="flex gap-2 mt-1">
-                            <input v-model="editingForm.meeting.c2Title" placeholder="標題" class="med-input w-1/3">
-                            <input v-model="editingForm.meeting.c2Text" placeholder="內容" class="med-input w-2/3">
-                        </div>
-                    </div>
-                    <div class="pt-2 border-t border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 ml-1">報告區塊 3 (右)</label>
-                        <div class="flex gap-2 mt-1">
-                            <input v-model="editingForm.meeting.c3Title" placeholder="標題" class="med-input w-1/3">
-                            <input v-model="editingForm.meeting.c3Text" placeholder="內容" class="med-input w-2/3">
-                        </div>
-                    </div>
-
-                    <!-- ===== 隊務報告 動態條列 ===== -->
-                    <div class="pt-3 border-t border-slate-100">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-[10px] font-black text-rose-500 ml-1 flex items-center gap-1">
-                                <i class="fa-solid fa-clipboard-list text-[10px]"></i> 隊務報告
-                            </label>
-                            <span class="text-[9px] text-slate-400 font-bold">{{ editingForm.meeting.teamItems?.length || 0 }} 點</span>
-                        </div>
-                        <div class="space-y-2">
-                            <div v-for="(item, idx) in editingForm.meeting.teamItems" :key="'team-'+idx" class="item-card">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="item-num bg-rose-100 text-rose-600">{{ idx + 1 }}</div>
-                                    <input v-model="item.title" placeholder="小標題（如：裝備保養）" class="med-input flex-1 !py-2 !text-[13px]">
-                                    <button @click.stop="editingForm.meeting.teamItems.splice(idx,1)" class="del-btn">
-                                        <i class="fa-solid fa-minus text-[10px]"></i>
-                                    </button>
-                                </div>
-                                <textarea v-model="item.text" placeholder="內容說明..." class="med-input w-full !text-[13px] resize-none" style="height:56px;"></textarea>
-                            </div>
-                        </div>
-                        <button @click.stop="editingForm.meeting.teamItems.push({title:'',text:''})" class="add-btn">
-                            <i class="fa-solid fa-plus text-[10px]"></i> 新增一點
-                        </button>
-                    </div>
-
-                    <!-- ===== 政令宣達 動態條列 ===== -->
-                    <div class="pt-3 border-t border-slate-100">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-[10px] font-black text-blue-500 ml-1 flex items-center gap-1">
-                                <i class="fa-solid fa-bullhorn text-[10px]"></i> 政令宣達
-                            </label>
-                            <span class="text-[9px] text-slate-400 font-bold">{{ editingForm.meeting.policyItems?.length || 0 }} 點</span>
-                        </div>
-                        <div class="space-y-2">
-                            <div v-for="(item, idx) in editingForm.meeting.policyItems" :key="'policy-'+idx" class="item-card">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="item-num bg-blue-100 text-blue-600">{{ idx + 1 }}</div>
-                                    <input v-model="item.title" placeholder="小標題（如：消防局公文）" class="med-input flex-1 !py-2 !text-[13px]">
-                                    <button @click.stop="editingForm.meeting.policyItems.splice(idx,1)" class="del-btn">
-                                        <i class="fa-solid fa-minus text-[10px]"></i>
-                                    </button>
-                                </div>
-                                <textarea v-model="item.text" placeholder="內容說明..." class="med-input w-full !text-[13px] resize-none" style="height:56px;"></textarea>
-                            </div>
-                        </div>
-                        <button @click.stop="editingForm.meeting.policyItems.push({title:'',text:''})" class="add-btn">
-                            <i class="fa-solid fa-plus text-[10px]"></i> 新增一點
-                        </button>
-                    </div>
-
-                    <!-- ===== 臨時動議 動態條列 ===== -->
-                    <div class="pt-3 border-t border-slate-100">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-[10px] font-black text-purple-500 ml-1 flex items-center gap-1">
-                                <i class="fa-regular fa-lightbulb text-[10px]"></i> 臨時動議
-                            </label>
-                            <span class="text-[9px] text-slate-400 font-bold">{{ editingForm.meeting.adhocItems?.length || 0 }} 點</span>
-                        </div>
-                        <div class="space-y-2">
-                            <div v-for="(item, idx) in editingForm.meeting.adhocItems" :key="'adhoc-'+idx" class="item-card">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <div class="item-num bg-purple-100 text-purple-600">{{ idx + 1 }}</div>
-                                    <input v-model="item.title" placeholder="小標題（如：討論事項）" class="med-input flex-1 !py-2 !text-[13px]">
-                                    <button @click.stop="editingForm.meeting.adhocItems.splice(idx,1)" class="del-btn">
-                                        <i class="fa-solid fa-minus text-[10px]"></i>
-                                    </button>
-                                </div>
-                                <textarea v-model="item.text" placeholder="內容說明..." class="med-input w-full !text-[13px] resize-none" style="height:56px;"></textarea>
-                            </div>
-                        </div>
-                        <button @click.stop="editingForm.meeting.adhocItems.push({title:'',text:''})" class="add-btn">
-                            <i class="fa-solid fa-plus text-[10px]"></i> 新增一點
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <div class="pt-4 pb-2">
-                <button @click="saveTrainingData" :disabled="isSaving" class="w-full py-4 rounded-2xl bg-slate-900 text-white font-black text-lg shadow-lg active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-                    <i v-if="isSaving" class="fa-solid fa-spinner fa-spin"></i>
-                    <span>{{ isSaving ? '儲存中...' : '確認儲存修改' }}</span>
-                </button>
+                <textarea v-model="item.text" placeholder="內容說明..." class="med-input w-full !text-[13px] resize-none h-14"></textarea>
             </div>
         </div>
+        <button @click.stop="editingForm.meeting.teamItems.push({title:'',text:''})" class="add-btn">
+            <i class="fa-solid fa-plus text-[10px]"></i> 新增一點
+        </button>
+    </div>
+
+    <!-- ===== 政令宣達 動態條列 ===== -->
+    <div class="pt-3 border-t border-slate-100">
+        <div class="flex items-center justify-between mb-2">
+            <label class="text-[10px] font-black text-blue-500 ml-1 flex items-center gap-1">
+                <i class="fa-solid fa-bullhorn text-[10px]"></i> 政令宣達
+            </label>
+            <span class="text-[9px] text-slate-400 font-bold">{{ editingForm.meeting.policyItems?.length || 0 }} 點</span>
+        </div>
+        <div class="space-y-2">
+            <div v-for="(item, idx) in editingForm.meeting.policyItems" :key="'policy-'+idx" class="item-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="item-num bg-blue-100 text-blue-600">{{ idx + 1 }}</div>
+                    <input v-model="item.title" placeholder="小標題" class="med-input flex-1 !py-2 !text-[13px]">
+                    <button @click.stop="editingForm.meeting.policyItems.splice(idx,1)" class="del-btn">
+                        <i class="fa-solid fa-minus text-[10px]"></i>
+                    </button>
+                </div>
+                <textarea v-model="item.text" placeholder="內容說明..." class="med-input w-full !text-[13px] resize-none h-14"></textarea>
+            </div>
+        </div>
+        <button @click.stop="editingForm.meeting.policyItems.push({title:'',text:''})" class="add-btn">
+            <i class="fa-solid fa-plus text-[10px]"></i> 新增一點
+        </button>
+    </div>
+
+    <!-- ===== 臨時動議 動態條列 ===== -->
+    <div class="pt-3 border-t border-slate-100">
+        <div class="flex items-center justify-between mb-2">
+            <label class="text-[10px] font-black text-purple-500 ml-1 flex items-center gap-1">
+                <i class="fa-regular fa-lightbulb text-[10px]"></i> 臨時動議
+            </label>
+            <span class="text-[9px] text-slate-400 font-bold">{{ editingForm.meeting.adhocItems?.length || 0 }} 點</span>
+        </div>
+        <div class="space-y-2">
+            <div v-for="(item, idx) in editingForm.meeting.adhocItems" :key="'adhoc-'+idx" class="item-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="item-num bg-purple-100 text-purple-600">{{ idx + 1 }}</div>
+                    <input v-model="item.title" placeholder="小標題" class="med-input flex-1 !py-2 !text-[13px]">
+                    <button @click.stop="editingForm.meeting.adhocItems.splice(idx,1)" class="del-btn">
+                        <i class="fa-solid fa-minus text-[10px]"></i>
+                    </button>
+                </div>
+                <textarea v-model="item.text" placeholder="內容說明..." class="med-input w-full !text-[13px] resize-none h-14"></textarea>
+            </div>
+        </div>
+        <button @click.stop="editingForm.meeting.adhocItems.push({title:'',text:''})" class="add-btn">
+            <i class="fa-solid fa-plus text-[10px]"></i> 新增一點
+        </button>
+    </div>
+</div>
+
+    <!-- 儲存按鈕 -->
+    <div class="pt-4 pb-2">
+        <button @click="saveTrainingData" :disabled="isSaving" class="w-full py-4 rounded-2xl bg-slate-900 text-white font-black text-lg shadow-lg active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+            <i v-if="isSaving" class="fa-solid fa-spinner fa-spin"></i>
+            <span>{{ isSaving ? '儲存中...' : '確認儲存修改' }}</span>
+        </button>
+    </div>
+</div>
     </div>
 
     <!-- 全螢幕 PPT 簡報視窗 -->
@@ -550,8 +576,8 @@
                         </div>
                     </div>
 
-                    <!-- Slide 2: 慶生 -->
-                    <div v-if="pptMockData.birthdays.length > 0" class="swiper-slide px-0 relative w-full h-full overflow-hidden party-bg flex flex-col justify-between py-6 md:py-10">
+                   <!-- Slide 2: 慶生 (僅雙數月且有名單才顯示) -->
+                    <div v-if="pptBirthdays.length > 0" class="swiper-slide px-0 relative w-full h-full overflow-hidden party-bg flex flex-col justify-between py-6 md:py-10">
                         <div class="w-full text-center shrink-0 z-20 mt-4 md:mt-8 h-auto">
                              <h2 class="text-5xl md:text-[8rem] font-black text-slate-800 tracking-tighter drop-shadow-sm mb-2">Happy Birthday</h2>
                         </div>
@@ -559,13 +585,13 @@
                             <div class="flex flex-col md:flex-row justify-center items-start gap-8 md:gap-20 w-full max-w-7xl px-4">
                                 <div class="w-full flex flex-col items-center">
                                     <div class="mb-4 md:mb-6">
-                                        <span class="text-slate-400 font-black text-base md:text-2xl tracking-[0.2em] uppercase border-b-4 border-pink-200 pb-2">★ {{ pptMonth }}月 壽星 ★</span>
+                                        <span class="text-slate-400 font-black text-base md:text-2xl tracking-[0.2em] uppercase border-b-4 border-pink-200 pb-2">★ {{ pptBirthdayRange }} 壽星 ★</span>
                                     </div>
                                     <div class="flex flex-wrap justify-center content-center w-full gap-3 md:gap-4">
-                                        <div v-for="b in pptMockData.birthdays" :key="b.name" class="group relative min-w-[140px] md:min-w-[180px] m-2 animate-pop">
+                                        <div v-for="b in pptBirthdays" :key="b.name" class="group relative min-w-[140px] md:min-w-[180px] m-2 animate-pop">
                                             <div class="bg-white/80 backdrop-blur-sm border-2 border-white rounded-3xl px-6 py-4 shadow-sm flex flex-col items-center justify-center transform group-hover:scale-105 transition-all hover:shadow-lg hover:border-pink-200">
                                                 <span class="text-2xl md:text-5xl font-black text-slate-800 tracking-wider">{{ b.name }}</span>
-                                                <span class="text-sm md:text-xl text-pink-500 font-bold mt-2 bg-pink-50 px-4 py-1 rounded-full">{{ b.month }}/{{ b.day }}</span>
+                                                <span class="text-sm md:text-xl text-pink-500 font-bold mt-2 bg-pink-50 px-4 py-1 rounded-full">{{ b.displayDate }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1147,15 +1173,21 @@
         setup() {
             const activeTab = ref('training'); 
             const trainingStep = ref('list');
-const currentRealYear = new Date().getFullYear(); // 取得現在電腦時間的年份 (例如 2025)
-const selectedYear = ref(String(currentRealYear)); // 預設顯示今年
-// 自動生成年份列表：從 2025 開始到今年
+// 在 setup() 內部找到約 560 行處
+const currentRealYear = new Date().getFullYear(); 
+const selectedYear = ref(String(currentRealYear));
+
+// 1. 新增這個判斷：目前選中的年份是否不是當前電腦時間年份
+const isNotCurrentYear = computed(() => {
+    return parseInt(selectedYear.value) !== currentRealYear;
+});
+
 const availableYears = computed(() => {
     const years = [];
+    // 讓列表至少包含 2025 到今年
     for (let y = 2025; y <= currentRealYear; y++) {
         years.push(String(y));
     }
-    // 如果想要提前規劃明年，可以改為 y <= currentRealYear + 1
     return years;
 });
             const membersList = ref([]);
@@ -1166,12 +1198,46 @@ const availableYears = computed(() => {
             const titlePriority = { '分隊長': 1, '副分隊長': 2, '幹事': 3, '助理幹事': 4, '小隊長': 5, '副小隊長': 6, '隊員': 7 };
             const groupPriority = { '幹部': 1, '第一小隊': 2, '第二小隊': 3, '第三小隊': 4 };
 
-            const pptMockData = ref({
-                birthdays: [
-                    { name: '陳政龍', month: 4, day: 10 },
-                    { name: '林健煌', month: 4, day: 25 }
-                ]
+           // 新增：自動計算慶生月份區間 (例如 1-2月)
+            const pptBirthdayRange = computed(() => {
+                const match = selectedTraining.value?.dateStr.match(/(\d+)月/);
+                if (!match) return "";
+                const m = parseInt(match[1]);
+                if (m % 2 !== 0) return ""; // 奇數月不慶生
+                return `${m - 1}-${m}月`;
             });
+
+            // 新增：自動過濾壽星名單
+            const pptBirthdays = computed(() => {
+                if (!selectedTraining.value || !membersList.value.length) return [];
+                const match = selectedTraining.value.dateStr.match(/(\d+)月/);
+                if (!match) return [];
+                const trainMonth = parseInt(match[1]);
+                if (trainMonth % 2 !== 0) return []; // 只在雙數月顯示
+
+                const targetMonths = [trainMonth - 1, trainMonth];
+                return membersList.value
+                    .filter(m => {
+                        if (!m.birthday) return false;
+                        const parts = m.birthday.split('-');
+                        const bMonth = parseInt(parts[parts.length - 2]); 
+                        return targetMonths.includes(bMonth);
+                    })
+                    .map(m => {
+                        const parts = m.birthday.split('-');
+                        const mm = parts[parts.length - 2].padStart(2, '0');
+                        const dd = parts[parts.length - 1].padStart(2, '0');
+                        return { name: m.姓名, displayDate: `${mm}/${dd}`, sortKey: mm + dd };
+                    })
+                    .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+            });
+
+const openSections = ref([]); // 預設全部收起
+const toggleSection = (name) => {
+    const idx = openSections.value.indexOf(name);
+    if (idx > -1) openSections.value.splice(idx, 1);
+    else openSections.value.push(name);
+};
 
             // ===== PPT 條列 computed =====
             const pptTeamItems = computed(() => {
@@ -1429,6 +1495,7 @@ const changeYear = () => {
                     const dy = String(match[2]).padStart(2, '0');
                     editingForm.value.rawDate = '2026-' + mo + '-' + dy;
                 }
+openSections.value = []; 
                 isEditModalOpen.value = true;
             };
 
@@ -1557,9 +1624,10 @@ const onSliderScroll = (e) => {
                 isTrainingLoading, trainingList, selectedTraining, nextTrainingId, openTrainingDetail,
                 isEditModalOpen, isSaving, saveToast, editingForm, openEditTrainingModal, saveTrainingData,
                 isPptOpen, danmakus, startPresentation, closePpt, triggerDanmaku,
-                pptMonth, coverHexagons, pptMockData,onSliderScroll,
+                pptMonth, coverHexagons, pptBirthdays, pptBirthdayRange, onSliderScroll,isNotCurrentYear, 
                 pptTeamItems, pptPolicyItems, pptAdhocItems,loadPdf,selectedYear,availableYears,
-    changeYear,
+    changeYear,openSections,
+    toggleSection,
                 detailTeamSummary, detailPolicySummary, detailAdhocSummary,
                 isAwardOpen, awardData, showAward, closeAward,
                 monthlyMissions, dynamicRosterGroups, missionColors,
