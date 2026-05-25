@@ -125,7 +125,15 @@
             <div v-if="isAdmin" class="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shadow-sm border border-amber-200">
                 <i class="fa-solid fa-crown text-sm"></i>
             </div>
-            <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-600 shadow-sm border border-slate-200 active:scale-95 transition-transform"><i class="fa-solid fa-bell text-sm"></i></button>
+           <div class="relative">
+    <div class="relative">
+    <button class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm border border-slate-200 active:scale-95 transition-transform">
+        <i class="fa-solid fa-calendar-check text-sm"></i>
+    </button>
+    <select v-model="selectedYear" @change="changeYear" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+        <option v-for="y in availableYears" :key="y" :value="y">{{ y }} 年度</option>
+    </select>
+</div>
         </div>
     </header>
 
@@ -161,7 +169,8 @@
                     <div class="flex justify-between items-end mb-4 px-1">
                         <div>
                             <h2 class="text-2xl font-black text-slate-800 tracking-wider">常訓日期</h2>
-                            <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase">2026 年度訓練計畫</p>
+                            <!-- 找這行改成這樣 -->
+<p class="text-[11px] font-bold text-slate-400 mt-1 uppercase">{{ selectedYear }} 年度訓練計畫</p>
                         </div>
                     </div>
                     
@@ -1138,7 +1147,17 @@
         setup() {
             const activeTab = ref('training'); 
             const trainingStep = ref('list');
-
+const currentRealYear = new Date().getFullYear(); // 取得現在電腦時間的年份 (例如 2025)
+const selectedYear = ref(String(currentRealYear)); // 預設顯示今年
+// 自動生成年份列表：從 2025 開始到今年
+const availableYears = computed(() => {
+    const years = [];
+    for (let y = 2025; y <= currentRealYear; y++) {
+        years.push(String(y));
+    }
+    // 如果想要提前規劃明年，可以改為 y <= currentRealYear + 1
+    return years;
+});
             const membersList = ref([]);
             const isMembersLoading = ref(true);
             const membersError = ref('');
@@ -1343,25 +1362,49 @@
             const isTrainingLoading = ref(true);
             const trainingList = ref([]);
             const nextTrainingId = ref(null);
+const loadTrainingData = async () => {
+    try {
+        isTrainingLoading.value = true;
+        
+        // 資料庫路徑改為：training_data_2025, training_data_2026...
+        const collectionName = `training_data_${selectedYear.value}`;
+        
+        const snapshot = await getDocs(collection(db, collectionName));
+        const dbData = {};
+        snapshot.forEach(docSnap => { dbData[parseInt(docSnap.id)] = docSnap.data(); });
+        
+        // 如果該年份完全沒資料 (例如剛過完年)，會自動使用預設的空白模板
+        trainingList.value = DEFAULT_TRAINING_LIST.map(item => 
+            dbData[item.id] ? { ...item, ...dbData[item.id], id: item.id } : { ...item }
+        );
 
-            const loadTrainingData = async () => {
-                try {
-                    isTrainingLoading.value = true;
-                    const snapshot = await getDocs(collection(db, 'training_data'));
-                    const dbData = {};
-                    snapshot.forEach(docSnap => { dbData[parseInt(docSnap.id)] = docSnap.data(); });
-                    trainingList.value = DEFAULT_TRAINING_LIST.map(item => dbData[item.id] ? { ...item, ...dbData[item.id], id: item.id } : { ...item });
-                    // 計算下次常訓
-                    const today = new Date();
-                    const upcoming = trainingList.value.filter(t => {
-                        const m = (t.dateStr || '').match(/(\d+)月(\d+)日/);
-                        if (!m) return false;
-                        const d = new Date(2026, parseInt(m[1])-1, parseInt(m[2]));
-                        return d >= today;
-                    });
-                    nextTrainingId.value = upcoming.length ? upcoming[0].id : null;
-                } catch (err) { trainingList.value = DEFAULT_TRAINING_LIST; } finally { isTrainingLoading.value = false; }
-            };
+        // 判斷「下次常訓」標籤 (只在選中的年份等於現在年份時計算)
+        const today = new Date();
+        if (parseInt(selectedYear.value) === today.getFullYear()) {
+            const upcoming = trainingList.value.filter(t => {
+                const m = (t.dateStr || '').match(/(\d+)月(\d+)日/);
+                if (!m) return false;
+                const d = new Date(today.getFullYear(), parseInt(m[1])-1, parseInt(m[2]));
+                return d >= today;
+            });
+            nextTrainingId.value = upcoming.length ? upcoming[0].id : null;
+        } else {
+            nextTrainingId.value = null;
+        }
+    } catch (err) { 
+        console.error("載入失敗:", err);
+        trainingList.value = DEFAULT_TRAINING_LIST; 
+    } finally { 
+        isTrainingLoading.value = false; 
+    }
+};
+
+
+
+const changeYear = () => {
+    trainingStep.value = 'list'; // 切換年份時回到列表頁
+    loadTrainingData(); // 重新抓資料
+};
 
             const openTrainingDetail = (item) => {
                 if (isAdmin.value || !item.isLocked) { selectedTraining.value = item; trainingStep.value = 'detail'; loadMonthlyMissions(item.dateStr); }
@@ -1390,25 +1433,27 @@
             };
 
             const saveTrainingData = async () => {
-                isSaving.value = true;
-                try {
-                    const dataToSave = JSON.parse(JSON.stringify(editingForm.value));
-                    // 同時保存舊字串格式（向下相容）
-                    const m = dataToSave.meeting;
-                    m.team   = m.teamItems.map(i => [i.title, i.text].filter(Boolean).join('：')).join('\n') || '無';
-                    m.policy = m.policyItems.map(i => [i.title, i.text].filter(Boolean).join('：')).join('\n') || '無';
-                    m.adhoc  = m.adhocItems.map(i => [i.title, i.text].filter(Boolean).join('：')).join('\n') || '無';
-                    await setDoc(doc(db, 'training_data', String(dataToSave.id)), dataToSave, { merge: true });
-                    saveToast.value = '✓ 已儲存';
-                    await loadTrainingData();
-                    // 更新 selectedTraining（若正在看詳情）
-                    if (selectedTraining.value?.id === dataToSave.id) {
-                        selectedTraining.value = trainingList.value.find(t => t.id === dataToSave.id) || selectedTraining.value;
-                    }
-                    isEditModalOpen.value = false;
-                } catch (err) { saveToast.value = '⚠ 失敗：' + err.message; }
-                finally { isSaving.value = false; setTimeout(() => saveToast.value = '', 3000); }
-            };
+    isSaving.value = true;
+    try {
+        const dataToSave = JSON.parse(JSON.stringify(editingForm.value));
+        const m = dataToSave.meeting;
+        m.team   = m.teamItems.map(i => [i.title, i.text].filter(Boolean).join('：')).join('\n') || '無';
+        m.policy = m.policyItems.map(i => [i.title, i.text].filter(Boolean).join('：')).join('\n') || '無';
+        m.adhoc  = m.adhocItems.map(i => [i.title, i.text].filter(Boolean).join('：')).join('\n') || '無';
+        
+        // 關鍵：存入該年份的 Collection
+        const collectionName = `training_data_${selectedYear.value}`;
+        await setDoc(doc(db, collectionName, String(dataToSave.id)), dataToSave, { merge: true });
+        
+        saveToast.value = '✓ 已儲存';
+        await loadTrainingData();
+        if (selectedTraining.value?.id === dataToSave.id) {
+            selectedTraining.value = trainingList.value.find(t => t.id === dataToSave.id) || selectedTraining.value;
+        }
+        isEditModalOpen.value = false;
+    } catch (err) { saveToast.value = '⚠ 失敗：' + err.message; }
+    finally { isSaving.value = false; setTimeout(() => saveToast.value = '', 3000); }
+};
 
             const onTeamChange = () => {
                 const maps = { '第一小隊': 'bg-blue-50 text-blue-600', '第二小隊': 'bg-emerald-50 text-emerald-600', '第三小隊': 'bg-orange-50 text-orange-600' };
@@ -1513,7 +1558,8 @@ const onSliderScroll = (e) => {
                 isEditModalOpen, isSaving, saveToast, editingForm, openEditTrainingModal, saveTrainingData,
                 isPptOpen, danmakus, startPresentation, closePpt, triggerDanmaku,
                 pptMonth, coverHexagons, pptMockData,onSliderScroll,
-                pptTeamItems, pptPolicyItems, pptAdhocItems,loadPdf,
+                pptTeamItems, pptPolicyItems, pptAdhocItems,loadPdf,selectedYear,availableYears,
+    changeYear,
                 detailTeamSummary, detailPolicySummary, detailAdhocSummary,
                 isAwardOpen, awardData, showAward, closeAward,
                 monthlyMissions, dynamicRosterGroups, missionColors,
