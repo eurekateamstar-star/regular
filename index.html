@@ -760,20 +760,32 @@
                                         <th v-for="m in 12" :key="m" class="p-3 md:p-5 text-center font-mono sticky top-0 bg-slate-800/80 backdrop-blur-md border-b border-cyan-500/30 min-w-[50px] md:min-w-[80px] text-cyan-300">{{ m }}月</th>
                                         <th class="p-3 md:p-5 text-center text-amber-400 font-black sticky right-0 z-20 bg-slate-900/90 backdrop-blur-md border-b border-amber-500/50 min-w-[80px] md:min-w-[120px] shadow-[-4px_0_10px_rgba(0,0,0,0.5)]">總計</th>
                                     </tr>
-                                 </thead>
                                  <tbody class="divide-y divide-white/5">
-                                     <tr v-for="(row, rIdx) in pptMockData.dutyStats" :key="row.name" class="group animate-pop bg-white/5 border-b border-white/5 hover:bg-cyan-500/20 transition-colors" :class="{'bg-gradient-to-r from-yellow-900/40 via-amber-900/20 to-yellow-900/40 border-y border-yellow-400/50 shadow-[0_0_15px_rgba(234,179,8,0.2)] z-10 relative': row.total >= 200}" :style="{animationDelay: Math.min(rIdx*0.05, 1) + 's'}">
-                                         <td @click="showAward(row.name, row.total)" class="p-3 md:p-5 text-left sticky left-0 z-10 border-r border-cyan-500/30 shadow-[4px_0_10px_rgba(0,0,0,0.3)] whitespace-nowrap text-sm md:text-xl cursor-pointer hover:bg-white/20 transition-colors select-none active:scale-95" :class="row.total >= 200 ? 'bg-slate-900/95 text-yellow-300 font-black drop-shadow-[0_0_5px_rgba(253,224,71,0.8)]' : 'bg-slate-900/90 text-white'">
-                                            <span v-if="row.total >= 200" class="mr-1 text-xl">👑</span>{{ row.name }}
-                                         </td>
-                                         <td v-for="m in 12" :key="m" class="p-3 md:p-5 text-center font-mono text-sm md:text-xl border-r border-white/5" :class="getColorClass(row['m'+m], row.total)">
-                                             {{ row['m'+m] }}
-                                         </td>
-                                         <td class="p-3 md:p-5 text-center font-black text-base md:text-2xl sticky right-0 z-10 bg-slate-900/90 border-l border-amber-500/30 shadow-[-4px_0_10px_rgba(0,0,0,0.3)]" :class="row.total >= 200 ? 'text-yellow-300 text-lg md:text-3xl drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]' : 'text-amber-400'">
-                                             {{ row.total }}
-                                         </td>
-                                     </tr>
-                                 </tbody>
+    <!-- 這裡改用 processedDutyStats -->
+    <tr v-for="(row, rIdx) in processedDutyStats" :key="row.name" 
+        class="group animate-pop bg-white/5 border-b border-white/5 hover:bg-cyan-500/20 transition-colors" 
+        :class="{'bg-gradient-to-r from-yellow-900/40 via-amber-900/20 to-yellow-900/40 border-y border-yellow-400/50 shadow-[0_0_15px_rgba(234,179,8,0.2)] z-10 relative': row.total >= 200}" 
+        :style="{animationDelay: Math.min(rIdx*0.05, 1) + 's'}">
+        
+        <td @click="showAward(row.name, row.total)" 
+            class="p-3 md:p-5 text-left sticky left-0 z-10 border-r border-cyan-500/30 shadow-[4px_0_10px_rgba(0,0,0,0.3)] whitespace-nowrap text-sm md:text-xl cursor-pointer hover:bg-white/20 transition-colors select-none active:scale-95" 
+            :class="row.total >= 200 ? 'bg-slate-900/95 text-yellow-300 font-black drop-shadow-[0_0_5px_rgba(253,224,71,0.8)]' : 'bg-slate-900/90 text-white'">
+           <span v-if="row.total >= 200" class="mr-1 text-xl">👑</span>{{ row.name }}
+        </td>
+
+        <!-- 這裡調用 getCellClass 並傳入月份索引 mIdx -->
+        <td v-for="mIdx in 12" :key="mIdx" 
+            class="p-3 md:p-5 text-center font-mono text-sm md:text-xl border-r border-white/5" 
+            :class="getCellClass(row['m'+mIdx], mIdx)">
+            {{ row['m'+mIdx] }}
+        </td>
+
+        <td class="p-3 md:p-5 text-center font-black text-base md:text-2xl sticky right-0 z-10 bg-slate-900/90 border-l border-amber-500/30 shadow-[-4px_0_10px_rgba(0,0,0,0.3)]" 
+            :class="row.total >= 200 ? 'text-yellow-300 text-lg md:text-3xl drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]' : 'text-amber-400'">
+            {{ row.total }}
+        </td>
+    </tr>
+</tbody>
                               </table>
                            </div>
                         </div>
@@ -794,8 +806,8 @@
                         <div class="relative z-10 w-full h-auto max-h-[80vh] overflow-visible">
                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 lg:gap-8 w-full p-2 md:p-4">
                                <div v-for="dayItem in trainingList" :key="dayItem.id" class="relative w-full aspect-[4/3] md:aspect-auto md:h-40 rounded-2xl flex flex-col items-center justify-center p-2 md:p-4 transition-all duration-500 bg-white shadow-sm hover:scale-105 border border-slate-100" :class="{'scale-110 md:scale-125 shadow-2xl border-4 border-red-500 z-20': dayItem.id === nextTrainingId}">
-                                   <div v-if="dayItem.id === nextTrainingId" class="absolute -top-3 -right-3 z-30 animate-bounce">
-                                       <span class="bg-red-500 text-white text-xs md:text-sm font-bold px-3 py-1 rounded-full shadow-md border-2 border-white">下次常訓</span>
+              <div v-if="dayItem.id === (selectedTraining?.id % 12 + 1)" class="absolute -top-3 -right-3 z-30 animate-bounce">
+        <span class="bg-red-500 text-white text-xs md:text-sm font-bold px-3 py-1 rounded-full shadow-md border-2 border-white">下次常訓</span>
                                    </div>
                                    <div class="mb-2 md:mb-3">
                                        <span class="text-[10px] md:text-sm font-bold px-2 py-1 rounded-md" :class="dayItem.teamClass">{{ dayItem.team }}</span>
@@ -1084,11 +1096,77 @@
             const activeTab = ref('training'); 
             const trainingStep = ref('list');
 
-            // 人員
+            // 1. 人員基礎資料
             const membersList = ref([]);
             const isMembersLoading = ref(true);
             const membersError = ref('');
             const selectedMemberName = ref('');
+
+            // 2. 排序權重定義
+            const titlePriority = { '分隊長': 1, '副分隊長': 2, '幹事': 3, '助理幹事': 4, '小隊長': 5, '副小隊長': 6, '隊員': 7 };
+            const groupPriority = { '幹部': 1, '第一小隊': 2, '第二小隊': 3, '第三小隊': 4 };
+
+            // 3. PPT 其他幻燈片需要的資料 (防止白屏)
+            const pptMockData = ref({
+                birthdays: [
+                    { name: '陳政龍', month: 4, day: 10 },
+                    { name: '林健煌', month: 4, day: 25 }
+                ],
+                details: [
+                    { title: '裝備器材保養', desc: '本月請確實清點 AED 貼片數量\n各車加強氧氣鋼瓶檢查\n三合一攜行袋拉鍊損壞請通報', color: 'rose', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m3-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+                    { title: '救護宣導', desc: '配合消防局辦理宣導活動\n地點：海山國小\n時間：4月20日 09:00', color: 'blue', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }
+                ]
+            });
+
+            // 4. 【重點】處理時數統計表的計算與排序邏輯
+            const processedDutyStats = computed(() => {
+                if (!membersList.value.length) return [];
+                const list = [...membersList.value];
+                
+                // 排序：幹部 -> 一小 -> 二小 -> 三小
+                list.sort((a, b) => {
+                    const gpA = groupPriority[a.duty_group] || 99;
+                    const gpB = groupPriority[b.duty_group] || 99;
+                    if (gpA !== gpB) return gpA - gpB;
+                    const tpA = titlePriority[a.duty_title] || 99;
+                    const tpB = titlePriority[b.duty_title] || 99;
+                    if (tpA !== tpB) return tpA - tpB;
+                    return a.姓名.localeCompare(b.姓名, 'zh-TW');
+                });
+
+                return list.map(m => {
+                    let total = 0;
+                    const row = { name: m.姓名 };
+                    for (let i = 1; i <= 12; i++) {
+                        const mKey = `m${i}`;
+                        const monthStr = `${i}月`;
+                        // 檢查請假
+                        if (m.leave_month && Array.isArray(m.leave_month) && m.leave_month.includes(monthStr)) {
+                            row[mKey] = '請假';
+                        } else {
+                            const hours = parseInt(m[mKey]) || 0;
+                            row[mKey] = hours;
+                            total += hours;
+                        }
+                    }
+                    row.total = total;
+                    return row;
+                });
+            });
+
+            // 5. 【重點】判斷時數格子的顏色
+            const getCellClass = (val, mIdx) => {
+                const currentTrainingMonth = parseInt(selectedTraining.value?.id) || 1;
+                if (val === '請假') return 'text-rose-400 font-bold tracking-widest text-[10px] md:text-base';
+                const num = parseInt(val) || 0;
+                // 如果是 0 且在「當前常訓月份」之前 -> 變紅色
+                if (num === 0 && mIdx < currentTrainingMonth) {
+                    return 'text-red-500 font-black drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]';
+                }
+                if (num === 0) return 'text-slate-600';
+                if (num >= 20) return 'text-cyan-300 font-bold';
+                return 'text-slate-200';
+            };
 
             const loadMembers = async () => {
                 try {
@@ -1096,285 +1174,148 @@
                     const snapshot = await getDocs(collection(db, 'members'));
                     const list = [];
                     snapshot.forEach(docSnap => { list.push({ 姓名: docSnap.id, ...docSnap.data() }); });
-                    list.sort((a, b) => a.姓名.localeCompare(b.姓名, 'zh-TW'));
                     membersList.value = list;
                     const saved = localStorage.getItem('selectedMember');
                     if (saved && list.find(m => m.姓名 === saved)) { selectedMemberName.value = saved; } 
                     else if (list.length > 0) { selectedMemberName.value = list[0].姓名; }
-                } catch (err) {
-                    membersError.value = '人員載入失敗：' + (err.code || err.message || '請確認 Firebase 設定');
-                } finally { isMembersLoading.value = false; }
+                } catch (err) { membersError.value = '人員載入失敗'; } 
+                finally { isMembersLoading.value = false; }
             };
-const missionColors = [
-    'from-cyan-400 to-blue-600',    // 1 藍色系
-    'from-emerald-400 to-teal-600', // 2 綠色系
-    'from-orange-400 to-amber-600', // 3 橘色系
-    'from-rose-400 to-pink-600',    // 4 紅色系
-    'from-purple-400 to-violet-600' // 5 紫色系 (備用)
-];
 
-const titlePriority = {
-    '分隊長': 1,
-    '副分隊長': 2,
-    '幹事': 3,
-    '助理幹事': 4,
-    '小隊長': 5,
-    '副小隊長': 6,
-    '隊員': 7
-};
+            const missionColors = ['from-cyan-400 to-blue-600', 'from-emerald-400 to-teal-600', 'from-orange-400 to-amber-600', 'from-rose-400 to-pink-600', 'from-purple-400 to-violet-600'];
             const userData = computed(() => membersList.value.find(m => m.姓名 === selectedMemberName.value) || null);
             const switchUser = () => { localStorage.setItem('selectedMember', selectedMemberName.value); trainingStep.value = 'list'; };
             const isAdmin = computed(() => { if (!userData.value) return false; return userData.value.is_admin === true || userData.value.duty_group === '幹部'; });
 
-            // PPT 簡報邏輯 & Mock Data
+            const monthlyMissions = ref([]);
+            const loadMonthlyMissions = async (dateStr) => {
+                const match = dateStr.match(/(\d+)/);
+                if (!match) return;
+                let trainingMonth = parseInt(match[1]);
+                let targetYear = 2026;
+                let targetMonth = trainingMonth - 1;
+                if (targetMonth === 0) { targetMonth = 12; targetYear = 2025; }
+                const prefix = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
+                try {
+                    const q = query(collection(db, 'official_tasks'), where('date', '>=', `${prefix}-01`), where('date', '<=', `${prefix}-31`));
+                    const querySnapshot = await getDocs(q);
+                    const missionPromises = querySnapshot.docs.map(async (taskDoc) => {
+                        const taskData = taskDoc.data();
+                        const regQuery = query(collection(db, 'registrations'), where('taskId', '==', taskDoc.id), where('status', '==', '出席'));
+                        const regSnapshot = await getDocs(regQuery);
+                        const userNames = regSnapshot.docs.map(rd => rd.data().userName);
+                        const dParts = taskData.date.split('-');
+                        return { dateStr: `${parseInt(dParts[1])}月${parseInt(dParts[2])}日`, task: taskData.title, names: userNames };
+                    });
+                    monthlyMissions.value = (await Promise.all(missionPromises)).sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+                } catch (error) { monthlyMissions.value = []; }
+            };
+
+            const dynamicRosterGroups = computed(() => {
+                if (!membersList.value.length) return [];
+                const groupConfigs = [{ key: '幹部', color: 'from-purple-500 to-indigo-600' }, { key: '第一小隊', color: 'from-amber-400 to-orange-500' }, { key: '第二小隊', color: 'from-rose-400 to-red-500' }, { key: '第三小隊', color: 'from-cyan-400 to-blue-500' }];
+                return groupConfigs.map(config => {
+                    let groupMembers = membersList.value.filter(m => m.duty_group === config.key);
+                    groupMembers.sort((a, b) => {
+                        const pA = titlePriority[a.duty_title] || 99;
+                        const pB = titlePriority[b.duty_title] || 99;
+                        return pA !== pB ? pA - pB : a.姓名.localeCompare(b.姓名, 'zh-TW');
+                    });
+                    return { name: config.key, num: groupMembers.reduce((sum, m) => sum + (parseInt(m.duty_count) || 0), 0), color: config.color, people: groupMembers };
+                });
+            });
+
             const isPptOpen = ref(false);
             const danmakus = ref([]);
             let swiperInstance = null;
-            
-            // 動態從 Firebase 抓取的公差名單
-            const monthlyMissions = ref([]);
-
-            const loadMonthlyMissions = async (dateStr) => {
-    // 1. 提取月份並計算「前一個月」
-    const match = dateStr.match(/(\d+)/);
-    if (!match) return;
-    
-    let trainingMonth = parseInt(match[1]);
-    let targetYear = 2026; // 依照你的系統設定為 2026
-    let targetMonth = trainingMonth - 1;
-    
-    // 如果是 1 月常訓，則抓前一年 12 月
-    if (targetMonth === 0) {
-        targetMonth = 12;
-        targetYear = 2025;
-    }
-    
-    const prefix = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
-
-    try {
-        // 2. 抓取該月份的所有任務
-        const q = query(
-            collection(db, 'official_tasks'),
-            where('date', '>=', `${prefix}-01`),
-            where('date', '<=', `${prefix}-31`)
-        );
-        const querySnapshot = await getDocs(q);
-        
-        const missionPromises = querySnapshot.docs.map(async (taskDoc) => {
-            const taskData = taskDoc.data();
-            const taskId = taskDoc.id; // 這是任務的 ID
-
-            // 3. 根據任務 ID 到 registrations 集合抓取報名成功的人 (status: "出席")
-            const regQuery = query(
-                collection(db, 'registrations'),
-                where('taskId', '==', taskId),
-                where('status', '==', '出席')
-            );
-            const regSnapshot = await getDocs(regQuery);
-            const userNames = regSnapshot.docs.map(rd => rd.data().userName);
-
-            const dParts = taskData.date.split('-');
-            const displayDate = `${parseInt(dParts[1])}月${parseInt(dParts[2])}日`;
-
-            return {
-                dateStr: displayDate,
-                task: taskData.title,
-                names: userNames // 這裡現在會是資料庫裡真實登記的人
-            };
-        });
-
-        const missions = await Promise.all(missionPromises);
-        
-        // 依照日期排序
-        missions.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
-        monthlyMissions.value = missions;
-        
-    } catch (error) {
-        console.error("無法載入公差資料:", error);
-        monthlyMissions.value = [];
-    }
-};
-
-            // PPT 其他部分的假資料
-            const pptMockData = ref({
-                rosterGroups: [
-                    { name: '幹部', num: 48, color: 'from-purple-500 to-indigo-600', people: [{role:'分隊長', name:'陳政龍', score: 100}, {role:'副分隊長', name:'林健煌', score: 95}] },
-                    { name: '第一小隊', num: 40, color: 'from-amber-400 to-orange-500', people: [{role:'小隊長', name:'張三', score: 80}, {role:'副小隊長', name:'李四', score: 70}] },
-                    { name: '第二小隊', num: 50, color: 'from-rose-400 to-red-500', people: [{role:'小隊長', name:'王五', score: 90}] },
-                    { name: '第三小隊', num: 57, color: 'from-cyan-400 to-blue-500', people: [{role:'小隊長', name:'趙六', score: 85}] }
-                ],
-                dutyStats: [
-                    { name: '陳政龍', m1: 20, m2: 24, m3: 16, m4: 12, m5: 30, m6: 22, m7: 18, m8: 20, m9: 16, m10: 24, m11: 20, m12: 28, total: 250 },
-                    { name: '林健煌', m1: '請假', m2: 12, m3: 16, m4: 12, m5: 30, m6: 22, m7: 18, m8: 20, m9: 16, m10: 24, m11: 20, m12: 28, total: 218 }
-                ],
-                details: [
-                    { title: '裝備器材保養', desc: '本月請確實清點 AED 貼片數量\n各車加強氧氣鋼瓶檢查\n三合一攜行袋拉鍊損壞請通報', color: 'rose', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m3-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
-                    { title: '救護宣導', desc: '配合消防局辦理宣導活動\n地點：海山國小\n時間：4月20日 09:00', color: 'blue', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }
-                ],
-                birthdays: [
-                    { name: '陳政龍', month: 4, day: 10 },
-                    { name: '林健煌', month: 4, day: 25 }
-                ]
-            });
-
-
-const dynamicRosterGroups = computed(() => {
-    if (!membersList.value.length) return [];
-
-    // 定義要顯示的四個群組及其對應顏色
-    const groupConfigs = [
-        { key: '幹部', color: 'from-purple-500 to-indigo-600' },
-        { key: '第一小隊', color: 'from-amber-400 to-orange-500' },
-        { key: '第二小隊', color: 'from-rose-400 to-red-500' },
-        { key: '第三小隊', color: 'from-cyan-400 to-blue-500' }
-    ];
-
-    return groupConfigs.map(config => {
-        // 1. 篩選出屬於該群組的人員
-        let groupMembers = membersList.value.filter(m => m.duty_group === config.key);
-
-        // 2. 依照職稱排序，職稱相同則依姓名排序
-        groupMembers.sort((a, b) => {
-            const priorityA = titlePriority[a.duty_title] || 99;
-            const priorityB = titlePriority[b.duty_title] || 99;
-            if (priorityA !== priorityB) return priorityA - priorityB;
-            return a.姓名.localeCompare(b.姓名, 'zh-TW');
-        });
-
-        // 3. 計算該組總次數 (duty_count 加總)
-        const totalCount = groupMembers.reduce((sum, m) => sum + (parseInt(m.duty_count) || 0), 0);
-
-        return {
-            name: config.key,
-            num: totalCount, // 這是上方六角形要顯示的加總
-            color: config.color,
-            people: groupMembers
-        };
-    });
-});
-
             const startPresentation = () => {
                 isPptOpen.value = true;
                 nextTick(() => {
-                    // 自動要求全螢幕
-                    if (document.documentElement.requestFullscreen) {
-                        document.documentElement.requestFullscreen().catch((err) => {
-                            console.warn("無法自動進入全螢幕:", err);
-                        });
-                    }
+                    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
                     if (swiperInstance) swiperInstance.destroy();
-                    swiperInstance = new Swiper(".pptSwiper", {
-                        pagination: { el: ".swiper-pagination", clickable: true },
-                        keyboard: { enabled: true },
-                    });
+                    swiperInstance = new Swiper(".pptSwiper", { pagination: { el: ".swiper-pagination", clickable: true }, keyboard: { enabled: true } });
                 });
             };
-
             const closePpt = () => { 
                 isPptOpen.value = false; 
-                // 退出全螢幕
-                if (document.fullscreenElement && document.exitFullscreen) {
-                    document.exitFullscreen().catch((err) => {
-                        console.warn("無法退出全螢幕:", err);
-                    });
-                }
+                if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
             };
 
             const triggerDanmaku = () => {
-                const texts = ["分隊長連任！", "分隊長當選！", "恭喜連任！", "眾望所歸！", "凍蒜！", "太神啦！", "帥氣分隊長", "㊗️連任成功"];
-                const colors = ["#FF0000", "#FFD700", "#00FF00", "#00FFFF", "#FF00FF", "#FFFFFF"];
-                const text = texts[Math.floor(Math.random() * texts.length)];
-                const color = colors[Math.floor(Math.random() * colors.length)];
+                const texts = ["分隊長連任！", "恭喜連任！", "太神啦！", "帥氣分隊長"];
                 const id = Date.now();
-                const fontSize = Math.floor(Math.random() * 40) + 40;
-                const top = Math.floor(Math.random() * 80) + 10;
-                const duration = (Math.random() * 3) + 3;
-                
-                const style = { color: color, fontSize: `${fontSize}px`, top: `${top}%`, animationDuration: `${duration}s` };
-                danmakus.value.push({ id, text, style });
+                const duration = 4;
+                danmakus.value.push({ id, text: texts[Math.floor(Math.random() * texts.length)], style: { color: "#FFD700", fontSize: "50px", top: `${Math.random()*80+10}%`, animationDuration: `${duration}s` } });
                 setTimeout(() => { danmakus.value = danmakus.value.filter(d => d.id !== id); }, duration * 1000);
             };
 
             const pptMonth = computed(() => selectedTraining.value?.dateStr.match(/\d+/)?.[0] || "常");
+            const coverHexagons = computed(() => [
+               { text: pptMonth.value, gradient: 'from-amber-300 to-orange-500', shadow: 'shadow-orange-500/50' },
+               { text: '月', gradient: 'from-cyan-300 to-blue-600', shadow: 'shadow-blue-500/50' },
+               { text: '常', gradient: 'from-rose-300 to-red-600', shadow: 'shadow-red-500/50' },
+               { text: '訓', gradient: 'from-violet-300 to-purple-700', shadow: 'shadow-purple-500/50' }
+            ]);
 
-            const coverHexagons = computed(() => {
-                return [
-                   { text: pptMonth.value, gradient: 'from-amber-300 to-orange-500', shadow: 'shadow-orange-500/50' },
-                   { text: '月', gradient: 'from-cyan-300 to-blue-600', shadow: 'shadow-blue-500/50' },
-                   { text: '常', gradient: 'from-rose-300 to-red-600', shadow: 'shadow-red-500/50' },
-                   { text: '訓', gradient: 'from-violet-300 to-purple-700', shadow: 'shadow-purple-500/50' }
-                ];
-            });
-
-            const getColorClass = (val, total) => {
-                if (val === '請假') return 'text-rose-400 font-bold tracking-widest text-xs md:text-base';
-                let num = parseInt(val) || 0;
-                if (num === 0) return 'text-slate-700';
-                if (num < 8) return 'text-red-500 font-black drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]';
-                if (num > 20) return (total >= 200) ? 'text-yellow-200 font-black' : 'text-amber-300 font-black';
-                return 'text-cyan-100 font-bold';
-            };
-
-            // 頒獎系統
             const isAwardOpen = ref(false);
             const awardData = ref({ name: '', hours: 0 });
-            const showAward = (name, hours) => {
-                awardData.value = { name, hours: parseInt(hours) || 0 };
-                isAwardOpen.value = true;
-            };
-            const closeAward = () => { isAwardOpen.value = false; };
+            const showAward = (name, hours) => { awardData.value = { name, hours: parseInt(hours) || 0 }; isAwardOpen.value = true; };
 
-            // 常訓資料
             const selectedTraining = ref(null);
             const isTrainingLoading = ref(true);
             const trainingList = ref([]);
-
-            const nextTrainingId = computed(() => {
-                const now = new Date();
-                const currentMonth = now.getMonth() + 1;
-                const currentDay = now.getDate();
-                const thisMonth = trainingList.value.find(t => t.id === currentMonth);
-                if (thisMonth) {
-                    const match = thisMonth.dateStr.match(/(\d+)月(\d+)日/);
-                    if (match && currentDay <= parseInt(match[2])) return currentMonth;
-                }
-                return currentMonth < 12 ? currentMonth + 1 : null;
-            });
-
             const loadTrainingData = async () => {
                 try {
                     isTrainingLoading.value = true;
                     const snapshot = await getDocs(collection(db, 'training_data'));
                     const dbData = {};
                     snapshot.forEach(docSnap => { dbData[parseInt(docSnap.id)] = docSnap.data(); });
-                    trainingList.value = DEFAULT_TRAINING_LIST.map(item => {
-                        if (dbData[item.id]) return { ...item, ...dbData[item.id], id: item.id };
-                        return { ...item };
-                    });
-                } catch (err) {
-                    trainingList.value = DEFAULT_TRAINING_LIST.map(i => ({ ...i }));
-                } finally { isTrainingLoading.value = false; }
+                    trainingList.value = DEFAULT_TRAINING_LIST.map(item => dbData[item.id] ? { ...item, ...dbData[item.id], id: item.id } : { ...item });
+                } catch (err) { trainingList.value = DEFAULT_TRAINING_LIST; } finally { isTrainingLoading.value = false; }
             };
 
             const openTrainingDetail = (item) => {
-                if (isAdmin.value || !item.isLocked) { 
-                    selectedTraining.value = item; 
-                    trainingStep.value = 'detail'; 
-                    // 當點擊進入詳情時，開始載入該月份的公差名單
-                    loadMonthlyMissions(item.dateStr);
-                }
+                if (isAdmin.value || !item.isLocked) { selectedTraining.value = item; trainingStep.value = 'detail'; loadMonthlyMissions(item.dateStr); }
             };
 
             const isEditModalOpen = ref(false);
             const isSaving = ref(false);
             const saveToast = ref('');
             const editingForm = ref({ training: {}, meeting: {} });
-
+           const openEditTrainingModal = (item) => {
+                editingForm.value = JSON.parse(JSON.stringify(item));
+                
+                // 新增這段：把 "5月5日" 轉回 "2026-05-05" 讓 input date 能讀取
+                const match = (editingForm.value.dateStr || '').match(/(\d+)月(\d+)日/);
+                if (match) {
+                    const m = String(match[1]).padStart(2, '0');
+                    const d = String(match[2]).padStart(2, '0');
+                    editingForm.value.rawDate = '2026-' + m + '-' + d;
+                }
+                
+                isEditModalOpen.value = true;
+            };
+            const saveTrainingData = async () => {
+                isSaving.value = true;
+                try {
+                    await setDoc(doc(db, 'training_data', String(editingForm.value.id)), editingForm.value, { merge: true });
+                    saveToast.value = '✓ 已儲存';
+                    await loadTrainingData();
+                    isEditModalOpen.value = false;
+                } catch (err) { saveToast.value = '⚠ 失敗'; }
+                finally { isSaving.value = false; setTimeout(() => saveToast.value = '', 3000); }
+            };
+// 加入這段：處理小隊顏色變換
             const onTeamChange = () => {
-                const maps = { '第一小隊': 'bg-blue-50 text-blue-600', '第二小隊': 'bg-emerald-50 text-emerald-600', '第三小隊': 'bg-orange-50 text-orange-600' };
+                const maps = { 
+                    '第一小隊': 'bg-blue-50 text-blue-600', 
+                    '第二小隊': 'bg-emerald-50 text-emerald-600', 
+                    '第三小隊': 'bg-orange-50 text-orange-600' 
+                };
                 editingForm.value.teamClass = maps[editingForm.value.team] || 'bg-slate-50 text-slate-600';
             };
 
+            // 加入這段：處理日期選擇後，同步更新顯示文字 (例如 5月20日)
             const onDateChange = () => {
                 const raw = editingForm.value.rawDate;
                 if (!raw) return;
@@ -1383,90 +1324,17 @@ const dynamicRosterGroups = computed(() => {
                 editingForm.value.dateStr = month + '月' + day + '日';
                 editingForm.value.dayStr = ['(日)', '(一)', '(二)', '(三)', '(四)', '(五)', '(六)'][d.getDay()];
             };
-
-            const openEditTrainingModal = (item) => {
-                editingForm.value = JSON.parse(JSON.stringify(item));
-                const match = (editingForm.value.dateStr || '').match(/(\d+)月(\d+)日/);
-                if (match) {
-                    const m = String(match[1]).padStart(2, '0');
-                    const d = String(match[2]).padStart(2, '0');
-                    // 注意這裡預設用 2026 做編輯綁定
-                    editingForm.value.rawDate = '2026-' + m + '-' + d;
-                }
-                nextTick(() => { isEditModalOpen.value = true; });
-            };
-
-            const saveTrainingData = async () => {
-                isSaving.value = true;
-                const formData = JSON.parse(JSON.stringify(editingForm.value));
-                const idx = trainingList.value.findIndex(t => t.id === formData.id);
-                if (idx !== -1) { trainingList.value[idx] = formData; if (selectedTraining.value?.id === formData.id) selectedTraining.value = formData; }
-                isEditModalOpen.value = false;
-                try {
-                    const docRef = doc(db, 'training_data', String(formData.id));
-                    const { id, ...dataToSave } = formData;
-                    await setDoc(docRef, dataToSave, { merge: true });
-                    saveToast.value = '✓ 已儲存至資料庫';
-                } catch (err) {
-                    saveToast.value = '⚠ 儲存失敗';
-                } finally { isSaving.value = false; setTimeout(() => { saveToast.value = ''; }, 3000); }
-            };
-
-            // 滑動
-            const tabsOrder = ['training', 'manual', 'skill', 'medication'];
-            const touchStartX = ref(0);
-            const touchStartY = ref(0);
-            const onTouchStart = (e) => { touchStartX.value = e.touches[0].clientX; touchStartY.value = e.touches[0].clientY; };
-            const onTouchEnd = (e) => {
-                const touchEndX = e.changedTouches[0].clientX;
-                const touchEndY = e.changedTouches[0].clientY;
-                const deltaX = touchStartX.value - touchEndX; 
-                const deltaY = Math.abs(touchStartY.value - touchEndY);
-                if (deltaY > Math.abs(deltaX) || Math.abs(deltaX) < 40) return;
-                const currentIndex = tabsOrder.indexOf(activeTab.value);
-                if (activeTab.value === 'medication' && (deltaX > 0 || (deltaX < 0 && currentPage.value > 1))) return;
-                if (deltaX > 0 && currentIndex < tabsOrder.length - 1) activeTab.value = tabsOrder[currentIndex + 1];
-                else if (deltaX < 0 && currentIndex > 0) activeTab.value = tabsOrder[currentIndex - 1];
-            };
-
-            // PDF
-            const isPdfLoading = ref(false);
-            const pdfError = ref(false);
+            // PDF 與 其他輔助
             const totalPages = ref(0);
             const currentPage = ref(1);
-            const sliderRef = ref(null);
-            let hasLoadedPdf = false;
-
-            const loadPdfFromFirebase = async () => {
-                if (hasLoadedPdf) return;
-                hasLoadedPdf = true;
-                isPdfLoading.value = true;
-                try {
-                    const url = await getDownloadURL(storageRef(storage, 'medications.pdf'));
-                    const pdf = await pdfjsLib.getDocument({ url, withCredentials: false }).promise;
-                    totalPages.value = pdf.numPages;
-                    await nextTick();
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const canvas = document.getElementById('pdf-canvas-' + i);
-                        if (!canvas) continue;
-                        const viewport = page.getViewport({ scale: 2 });
-                        canvas.width = viewport.width; canvas.height = viewport.height;
-                        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-                    }
-                } catch (err) { pdfError.value = true; } finally { isPdfLoading.value = false; }
-            };
-
-            const onSliderScroll = () => { if (sliderRef.value) currentPage.value = Math.round(sliderRef.value.scrollLeft / sliderRef.value.clientWidth) + 1; };
-
-            onMounted(() => { loadMembers(); loadTrainingData(); loadPdfFromFirebase(); });
+            const isPdfLoading = ref(false);
+            onMounted(() => { loadMembers(); loadTrainingData(); });
 
             return {
-                activeTab, trainingStep, membersList, isMembersLoading, membersError, selectedMemberName, userData, switchUser, isAdmin,dynamicRosterGroups,
-                isTrainingLoading, trainingList, selectedTraining, openTrainingDetail, isEditModalOpen, isSaving, saveToast, editingForm, onTeamChange, onDateChange, openEditTrainingModal, saveTrainingData,
-                onTouchStart, onTouchEnd, nextTrainingId, isPdfLoading, pdfError, totalPages, currentPage, sliderRef, onSliderScroll,missionColors,
-                isPptOpen, danmakus, startPresentation, closePpt, triggerDanmaku, pptMonth, coverHexagons, pptMockData, getColorClass, isAwardOpen, awardData, showAward, closeAward,
-                monthlyMissions
+                activeTab, trainingStep, membersList, isMembersLoading, membersError, selectedMemberName, userData, switchUser, isAdmin, processedDutyStats, getCellClass,onTeamChange,onDateChange,
+                isTrainingLoading, trainingList, selectedTraining, openTrainingDetail, isEditModalOpen, isSaving, saveToast, editingForm, openEditTrainingModal, saveTrainingData,
+                isPptOpen, danmakus, startPresentation, closePpt, triggerDanmaku, pptMonth, coverHexagons, pptMockData, isAwardOpen, awardData, showAward,
+                monthlyMissions, dynamicRosterGroups, missionColors, totalPages, currentPage, isPdfLoading
             };
         }
     }).mount('#app');
