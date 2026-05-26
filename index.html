@@ -84,7 +84,37 @@
         @keyframes float-party { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-20px) rotate(2deg); } }
         .cake-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120%; height: 120%; background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%); z-index: -1; animation: pulse-glow 2s infinite; }
         @keyframes pulse-glow { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); } }
+/* ===== 吹蠟燭互動蛋糕專用 CSS (擬真版) ===== */
+        .interactive-cake-container { cursor: pointer; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); user-select: none; }
+        .interactive-cake-container:active { transform: scale(0.92); }
+        
+        /* 真實火焰閃爍 (結合大小、角度與透明度變化) */
+        .svg-flame-outer { transform-origin: 100px 45px; animation: flickerReal 0.15s ease-in-out infinite alternate; }
+        .svg-flame-inner { transform-origin: 100px 45px; animation: flickerReal 0.12s ease-in-out infinite alternate-reverse; }
+        .svg-flame-core { transform-origin: 100px 45px; animation: flickerReal 0.1s ease-in-out infinite alternate; }
+        
+        @keyframes flickerReal {
+            0% { transform: scale(0.95) rotate(-2deg); opacity: 0.85; }
+            100% { transform: scale(1.05) rotate(2deg); opacity: 1; }
+        }
 
+        /* 吹熄後的狀態 */
+        .is-blown .svg-flame-outer, .is-blown .svg-flame-inner, .is-blown .svg-flame-core, .is-blown .svg-glow {
+            opacity: 0;
+            transform: scale(0) translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: none;
+        }
+        
+        /* 吹熄後的白煙飄散動畫 (加入擴散與模糊) */
+        .is-blown .svg-smoke.s1 { animation: floatSmokeReal 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .is-blown .svg-smoke.s2 { animation: floatSmokeReal 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s forwards; }
+        .is-blown .svg-smoke.s3 { animation: floatSmokeReal 3s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards; }
+        @keyframes floatSmokeReal {
+            0% { opacity: 0.6; transform: translateY(0) scale(0.5); filter: blur(1px); }
+            50% { opacity: 0.4; filter: blur(3px); }
+            100% { opacity: 0; transform: translateY(-60px) scale(3.5) rotate(20deg); filter: blur(6px); }
+        }
         @keyframes danmaku-slide { from { transform: translateX(100vw); } to { transform: translateX(-100vw); } }
         .danmaku-item { position: fixed; white-space: nowrap; font-weight: 900; z-index: 20000; pointer-events: none; text-shadow: 2px 2px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; opacity: 0.9; animation: danmaku-slide 5s linear forwards; }
         
@@ -606,8 +636,145 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="shrink-0 w-full flex justify-center items-end pb-6 md:pb-10 z-30">
-                             <div class="relative"><div class="cake-glow"></div><div class="mega-cake">🎂</div></div>
+                        <!-- 互動式吹蠟燭蛋糕 -->
+                        <div class="shrink-0 w-full flex flex-col justify-center items-center pb-6 md:pb-10 z-30">
+                            <div class="relative interactive-cake-container animate-float-party" 
+                                 :class="{'is-blown': isCandleBlown}" 
+                                 @click="blowCandle">
+                                
+                                <!-- 發光背景 (吹熄後消失) -->
+                                <div class="cake-glow" v-show="!isCandleBlown"></div>
+                                
+                                <!-- 極致擬真 SVG 蛋糕 -->
+                                <svg viewBox="0 0 200 200" class="w-56 h-56 md:w-[26rem] md:h-[26rem] drop-shadow-[0_15px_25px_rgba(0,0,0,0.4)] relative z-10">
+                                    <!-- 定義漸層與濾鏡 -->
+                                    <defs>
+                                        <!-- 盤子立體漸層 -->
+                                        <radialGradient id="plateGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                                            <stop offset="40%" stop-color="#f8fafc" />
+                                            <stop offset="90%" stop-color="#cbd5e1" />
+                                            <stop offset="100%" stop-color="#94a3b8" />
+                                        </radialGradient>
+                                        <!-- 蛋糕體巧克力圓柱漸層 (創造兩側暗、中間亮的立體感) -->
+                                        <linearGradient id="cakeSide" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#451a03" />
+                                            <stop offset="15%" stop-color="#78350f" />
+                                            <stop offset="50%" stop-color="#92400e" />
+                                            <stop offset="85%" stop-color="#78350f" />
+                                            <stop offset="100%" stop-color="#451a03" />
+                                        </linearGradient>
+                                        <!-- 草莓糖霜圓柱漸層 -->
+                                        <linearGradient id="frostingSide" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#be185d" />
+                                            <stop offset="20%" stop-color="#f472b6" />
+                                            <stop offset="50%" stop-color="#fbcfe8" />
+                                            <stop offset="80%" stop-color="#f472b6" />
+                                            <stop offset="100%" stop-color="#be185d" />
+                                        </linearGradient>
+                                        <!-- 頂部糖霜的放射漸層 -->
+                                        <radialGradient id="frostingTop" cx="40%" cy="40%" r="60%">
+                                            <stop offset="0%" stop-color="#fdf2f8" />
+                                            <stop offset="50%" stop-color="#f9a8d4" />
+                                            <stop offset="100%" stop-color="#db2777" />
+                                        </radialGradient>
+                                        <!-- 蠟燭圓柱漸層 -->
+                                        <linearGradient id="candleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#eab308" />
+                                            <stop offset="30%" stop-color="#fef08a" />
+                                            <stop offset="70%" stop-color="#fde047" />
+                                            <stop offset="100%" stop-color="#ca8a04" />
+                                        </linearGradient>
+                                        <!-- 火焰發光濾鏡 -->
+                                        <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feGaussianBlur stdDeviation="4" result="blur" />
+                                            <feMerge>
+                                                <feMergeNode in="blur" />
+                                                <feMergeNode in="SourceGraphic" />
+                                            </feMerge>
+                                        </filter>
+                                        <!-- 高光模糊濾鏡 -->
+                                        <filter id="highlightBlur"><feGaussianBlur stdDeviation="1.5" /></filter>
+                                    </defs>
+
+                                    <!-- 盤子陰影與盤子本體 -->
+                                    <ellipse cx="100" cy="174" rx="92" ry="26" fill="rgba(0,0,0,0.15)" filter="blur(2px)" />
+                                    <ellipse cx="100" cy="170" rx="95" ry="28" fill="url(#plateGrad)" />
+                                    <ellipse cx="100" cy="168" rx="80" ry="22" fill="#e2e8f0" /> <!-- 盤子內圈 -->
+
+                                    <!-- 巧克力蛋糕體底座陰影 -->
+                                    <ellipse cx="100" cy="158" rx="72" ry="20" fill="rgba(0,0,0,0.3)" filter="blur(1px)"/>
+                                    <!-- 巧克力蛋糕體 (側邊) -->
+                                    <path d="M30 100 v55 a70 20 0 0 0 140 0 v-55 z" fill="url(#cakeSide)" />
+
+                                    <!-- 不規則的有機草莓糖霜 (Drips) -->
+                                    <path d="M30 100 
+                                             C 30 125, 45 130, 55 105 
+                                             C 65 140, 85 145, 95 110 
+                                             C 105 135, 120 140, 135 110 
+                                             C 145 125, 160 120, 170 100 
+                                             Z" fill="url(#frostingSide)" />
+                                    
+                                    <!-- 糖霜側邊立體反光 -->
+                                    <path d="M35 100 C 35 120, 45 120, 50 105" stroke="#fbcfe8" stroke-width="2" fill="none" opacity="0.6" stroke-linecap="round" filter="url(#highlightBlur)"/>
+                                    <path d="M68 100 C 70 130, 80 130, 90 110" stroke="#fbcfe8" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round" filter="url(#highlightBlur)"/>
+
+                                    <!-- 蛋糕頂部草莓面 -->
+                                    <ellipse cx="100" cy="100" rx="70" ry="20" fill="url(#frostingTop)" />
+                                    <!-- 頂部高光 (Glossy Reflection) 讓它看起來像濕潤的果醬 -->
+                                    <ellipse cx="90" cy="94" rx="40" ry="8" fill="#ffffff" opacity="0.4" filter="url(#highlightBlur)" transform="rotate(-5 90 94)"/>
+
+                                    <!-- 糖果碎片 (加上微陰影) -->
+                                    <g filter="drop-shadow(1px 1px 1px rgba(0,0,0,0.2))">
+                                        <rect x="55" y="95" width="10" height="4" rx="2" fill="#38BDF8" transform="rotate(35 55 95)" />
+                                        <rect x="125" y="105" width="12" height="4" rx="2" fill="#FDE047" transform="rotate(-55 125 105)" />
+                                        <rect x="135" y="90" width="8" height="4" rx="2" fill="#A3E635" transform="rotate(70 135 90)" />
+                                        <rect x="85" y="110" width="10" height="4" rx="2" fill="#C084FC" transform="rotate(-15 85 110)" />
+                                        <rect x="75" y="90" width="8" height="4" rx="2" fill="#FB923C" transform="rotate(10 75 90)" />
+                                        <rect x="110" y="98" width="9" height="4" rx="2" fill="#34D399" transform="rotate(-20 110 98)" />
+                                    </g>
+
+                                    <!-- 蠟燭底部插進蛋糕的陰影 -->
+                                    <ellipse cx="100" cy="85" rx="12" ry="4" fill="rgba(190, 24, 93, 0.6)" filter="blur(1px)"/>
+
+                                    <!-- 蠟燭體 -->
+                                    <rect x="92" y="45" width="16" height="40" fill="url(#candleGrad)" rx="2" />
+                                    <!-- 蠟燭紅白色旋轉條紋 -->
+                                    <g stroke="#EF4444" stroke-width="3" fill="none" opacity="0.8">
+                                        <path d="M92 50 Q100 55 108 50" />
+                                        <path d="M92 60 Q100 65 108 60" />
+                                        <path d="M92 70 Q100 75 108 70" />
+                                        <path d="M92 80 Q100 85 108 80" />
+                                    </g>
+                                    <!-- 蠟燭左側反光 -->
+                                    <rect x="94" y="46" width="3" height="38" fill="#ffffff" opacity="0.4" rx="1" filter="url(#highlightBlur)"/>
+
+                                    <!-- 燭芯 -->
+                                    <path d="M100 45 Q98 40 100 35" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                    <!-- 燭芯火光紅點 -->
+                                    <circle cx="100" cy="35" r="1.5" fill="#ef4444" class="svg-flame-core"/>
+
+                                    <!-- 白煙 (預設隱藏，吹熄時動畫) -->
+                                    <circle class="svg-smoke s1" cx="100" cy="25" r="6" fill="#e2e8f0" opacity="0"/>
+                                    <circle class="svg-smoke s2" cx="95" cy="15" r="10" fill="#f1f5f9" opacity="0"/>
+                                    <circle class="svg-smoke s3" cx="108" cy="5" r="14" fill="#ffffff" opacity="0"/>
+
+                                    <!-- 火焰環境光暈 (照亮蛋糕) -->
+                                    <ellipse class="svg-glow" cx="100" cy="40" rx="35" ry="35" fill="rgba(252, 211, 77, 0.15)" filter="blur(5px)" />
+
+                                    <!-- 真實多層次火焰 -->
+                                    <!-- 外層光暈 (紅橘) -->
+                                    <path class="svg-flame-outer" d="M100 5 Q85 30 100 40 Q115 30 100 5" fill="#ea580c" filter="url(#glowFilter)" opacity="0.8"/>
+                                    <!-- 中層火焰 (金黃) -->
+                                    <path class="svg-flame-inner" d="M100 12 Q92 30 100 38 Q108 30 100 12" fill="#fde047" />
+                                    <!-- 內層高溫焰心 (白) -->
+                                    <path class="svg-flame-core" d="M100 22 Q96 32 100 37 Q104 32 100 22" fill="#ffffff" />
+                                </svg>
+                            </div>
+                            
+                            <!-- 操作提示字樣 -->
+                            <div class="mt-4 bg-pink-100/80 text-pink-500 px-4 py-1.5 rounded-full font-bold text-sm md:text-xl tracking-widest animate-pulse border border-pink-200" v-show="!isCandleBlown">
+                                👆 點擊蛋糕吹熄蠟燭
+                            </div>
                         </div>
                     </div>
 
@@ -1259,30 +1426,35 @@ const availableYears = computed(() => {
                 return `${m - 1}-${m}月`;
             });
 
-            // 新增：自動過濾壽星名單
-            const pptBirthdays = computed(() => {
-                if (!selectedTraining.value || !membersList.value.length) return [];
-                const match = selectedTraining.value.dateStr.match(/(\d+)月/);
-                if (!match) return [];
-                const trainMonth = parseInt(match[1]);
-                if (trainMonth % 2 !== 0) return []; // 只在雙數月顯示
+            // 新增：自動過濾壽星名單 (防時區偏移版)
+const pptBirthdays = computed(() => {
+    if (!selectedTraining.value || !membersList.value.length) return [];
+    const match = selectedTraining.value.dateStr.match(/(\d+)月/);
+    if (!match) return [];
+    const trainMonth = parseInt(match[1]);
+    if (trainMonth % 2 !== 0) return []; // 只在雙數月顯示
 
-                const targetMonths = [trainMonth - 1, trainMonth];
-                return membersList.value
-                    .filter(m => {
-                        if (!m.birthday) return false;
-                        const parts = m.birthday.split('-');
-                        const bMonth = parseInt(parts[parts.length - 2]); 
-                        return targetMonths.includes(bMonth);
-                    })
-                    .map(m => {
-                        const parts = m.birthday.split('-');
-                        const mm = parts[parts.length - 2].padStart(2, '0');
-                        const dd = parts[parts.length - 1].padStart(2, '0');
-                        return { name: m.姓名, displayDate: `${mm}/${dd}`, sortKey: mm + dd };
-                    })
-                    .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-            });
+    const targetMonths = [trainMonth - 1, trainMonth];
+    return membersList.value
+        .filter(m => {
+            if (!m.birthday) return false;
+            // 強制只取前 10 個字元 (YYYY-MM-DD)，絕對不使用 new Date() 避免時區退後一天
+            const dateStr = String(m.birthday).substring(0, 10).replace(/\//g, '-');
+            const parts = dateStr.split('-');
+            if (parts.length < 3) return false;
+            
+            const bMonth = parseInt(parts[1], 10); 
+            return targetMonths.includes(bMonth);
+        })
+        .map(m => {
+            const dateStr = String(m.birthday).substring(0, 10).replace(/\//g, '-');
+            const parts = dateStr.split('-');
+            const mm = String(parts[1]).padStart(2, '0');
+            const dd = String(parts[2]).padStart(2, '0');
+            return { name: m.姓名, displayDate: `${mm}/${dd}`, sortKey: mm + dd };
+        })
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+});
 
 const openSections = ref([]); // 預設全部收起
 const toggleSection = (name) => {
@@ -1449,7 +1621,18 @@ const toggleSection = (name) => {
                     return { name: config.key, num: groupMembers.reduce((sum, m) => sum + (parseInt(m.duty_count) || 0), 0), color: config.color, people: groupMembers };
                 });
             });
-
+const isCandleBlown = ref(false);
+            const blowCandle = () => {
+                if (isCandleBlown.value) return; // 避免重複觸發
+                isCandleBlown.value = true;
+                
+                // 吹熄時自動發送祝福彈幕！
+                setTimeout(() => {
+                    const id = Date.now();
+                    danmakus.value.push({ id, text: "🎉 生日快樂！！！", style: { color: "#fff", fontSize: "60px", top: "40%", animationDuration: "5s" } });
+                    setTimeout(() => { danmakus.value = danmakus.value.filter(d => d.id !== id); }, 5000);
+                }, 300);
+            };
             const isPptOpen = ref(false);
             const danmakus = ref([]);
             let swiperInstance = null;
@@ -1463,9 +1646,10 @@ const toggleSection = (name) => {
             };
             const closePpt = () => { 
                 isPptOpen.value = false; 
+                // 關閉時重置蠟燭狀態
+                setTimeout(() => { isCandleBlown.value = false; }, 500); 
                 if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
             };
-
             const triggerDanmaku = () => {
                 const texts = ["分隊長連任！", "恭喜連任！", "太神啦！", "帥氣分隊長"];
                 const id = Date.now();
@@ -1690,7 +1874,7 @@ const onSliderScroll = (e) => {
                 pptMonth, coverHexagons, pptBirthdays, pptBirthdayRange, onSliderScroll,isNotCurrentYear, 
                 pptTeamItems, pptPolicyItems, pptAdhocItems,loadPdf,selectedYear,availableYears,
     changeYear,openSections,handleTouchStart,
-                handleTouchEnd,
+                handleTouchEnd,isCandleBlown, blowCandle,
     toggleSection,
                 detailTeamSummary, detailPolicySummary, detailAdhocSummary,
                 isAwardOpen, awardData, showAward, closeAward,
