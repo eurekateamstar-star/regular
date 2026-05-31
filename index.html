@@ -1003,7 +1003,7 @@
                                 <div class="hexagon-clip w-10 h-12 md:w-16 md:h-20 bg-gradient-to-br from-cyan-400 to-blue-600 shadow-[0_0_15px_rgba(6,182,212,0.6)] flex items-center justify-center">
                                    <svg class="w-6 h-6 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </div>
-                                <h2 class="text-2xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-blue-300 tracking-wider drop-shadow-lg">115年 救護時數統計</h2>
+                                <h2 class="text-2xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-blue-300 tracking-wider drop-shadow-lg">{{ selectedYear }}年 救護時數統計</h2>
                            </div>
                         </div>
                         <div class="relative z-20 flex-1 w-full overflow-hidden px-2 md:px-8 pb-8">
@@ -1105,7 +1105,135 @@
                          </div>
                          <div class="absolute bottom-0 w-full h-2 md:h-4 bg-gradient-to-r from-rose-400 via-orange-400 to-blue-400"></div>
                      </div>
+<!-- ===== Slide 10.5: 組織分布圖 (副小隊長黑色 & 幹部職稱加粗版) ===== -->
+                     <div class="swiper-slide px-4 relative w-full h-full bg-[#FAFAFA] flex flex-col items-center justify-evenly py-2 md:py-4 overflow-hidden select-none">
+                         <!-- 網格背景 -->
+                         <div class="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-40 pointer-events-none"></div>
 
+                         <div class="relative z-10 w-full max-w-6xl flex flex-col items-center h-full justify-between py-1">
+                             
+                             <!-- 標題 -->
+                             <div class="flex flex-col items-center shrink-0 mb-1">
+                                 <h2 class="text-xl md:text-4xl font-black text-slate-800 tracking-wider">海山義消救護分隊</h2>
+                                 <div class="w-16 md:w-32 h-1 bg-red-600 rounded-full mt-1"></div>
+                             </div>
+
+                             <!-- 組織圖主體 -->
+                             <div class="flex flex-col items-center w-full flex-1 justify-evenly py-1 gap-1">
+                                 
+                                 <!-- 第一排：分隊長(天然置中) + 志工承辦人(定位於分隊長左側並向右靠攏) -->
+                                 <div class="flex items-center justify-center w-full shrink-0 py-1">
+                                     
+                                     <!-- 基準容器：用來確保分隊長完全置中 -->
+                                     <div class="relative">
+                                         
+                                         <!-- 志工承辦人 (字體與職稱加粗) -->
+                                         <div class="absolute right-full mr-3 md:mr-8 top-1/2 -translate-y-1/2 flex items-center gap-1.5 md:gap-4 whitespace-nowrap z-20">
+                                             <div class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 md:px-6 md:py-3 shadow-sm text-center">
+                                                 <span class="text-[8px] md:text-sm text-slate-700 font-black bg-slate-105 px-2 py-0.5 rounded-full block mb-1">志工承辦人</span>
+                                                 <div class="text-xs md:text-2xl font-black text-slate-800 leading-none">{{ orgChartData.coordinator }}</div>
+                                             </div>
+                                             <!-- 右向指向箭頭 -->
+                                             <i class="fa-solid fa-arrow-right text-slate-300 text-xs md:text-2xl"></i>
+                                         </div>
+
+                                         <!-- 分隊長卡片 (字體與職稱加粗) -->
+                                         <div class="bg-white border-l-[6px] md:border-l-[12px] border-red-600 rounded-2xl px-6 py-3.5 md:px-12 md:py-5 shadow-md text-center min-w-[155px] md:min-w-[360px] relative transform scale-105 md:scale-110 z-10">
+                                             <div class="absolute top-2 right-2 md:top-4 md:right-4 text-red-500 text-xs md:text-3xl"><i class="fa-solid fa-user-tie"></i></div>
+                                             <span class="text-[8px] md:text-lg text-slate-800 font-black bg-slate-100 px-3 py-0.5 rounded-full block mb-1 w-fit mx-auto">分隊長</span>
+                                             <div class="text-base md:text-5xl font-black text-slate-900 tracking-wider leading-tight">{{ orgChartData.chief }}</div>
+                                         </div>
+
+                                     </div>
+                                 </div>
+
+                                 <!-- 向下微型箭頭 -->
+                                 <i class="fa-solid fa-arrow-down text-slate-200 text-[10px] md:text-base shrink-0"></i>
+
+                                 <!-- 第二排：副分隊長 (職稱與標籤加粗) -->
+                                 <div class="flex gap-4 md:gap-12 w-full justify-center px-4 shrink-0 max-w-3xl">
+                                     <div class="bg-white border-l-[5px] md:border-l-[10px] border-blue-600 rounded-xl px-3 py-1.5 md:px-8 md:py-4 shadow-md text-center flex-1 max-w-[200px] md:max-w-[380px] relative">
+                                         <div class="absolute top-2 right-2 text-blue-400 text-xs md:text-2xl"><i class="fa-solid fa-user"></i></div>
+                                         <div class="mb-1 md:mb-2"><span class="text-[8px] md:text-sm text-slate-700 font-black bg-slate-100 px-2 py-0.5 rounded-full">訓練業務</span></div>
+                                         <span class="text-[8px] md:text-lg text-blue-750 font-black block leading-none">副分隊長</span>
+                                         <div class="text-sm md:text-3xl font-black text-slate-850 mt-1 md:mt-2">{{ orgChartData.deputy1 }}</div>
+                                     </div>
+                                     
+                                     <div class="bg-white border-l-[5px] md:border-l-[10px] border-blue-600 rounded-xl px-3 py-1.5 md:px-8 md:py-4 shadow-md text-center flex-1 max-w-[200px] md:max-w-[380px] relative">
+                                         <div class="absolute top-2 right-2 text-blue-400 text-xs md:text-2xl"><i class="fa-solid fa-user"></i></div>
+                                         <div class="mb-1 md:mb-2"><span class="text-[8px] md:text-sm text-slate-700 font-black bg-slate-100 px-2 py-0.5 rounded-full">人事業務</span></div>
+                                         <span class="text-[8px] md:text-lg text-blue-750 font-black block leading-none">副分隊長</span>
+                                         <div class="text-sm md:text-3xl font-black text-slate-850 mt-1 md:mt-2">{{ orgChartData.deputy2 }}</div>
+                                     </div>
+                                 </div>
+
+                                 <!-- 向下微型箭頭 -->
+                                 <i class="fa-solid fa-arrow-down text-slate-200 text-[10px] md:text-base shrink-0"></i>
+
+                                 <!-- 第三排：幹事 / 助理幹事 (職稱與標籤加粗) -->
+                                 <div class="flex gap-4 md:gap-12 w-full justify-center px-4 shrink-0 max-w-3xl">
+                                     <div class="bg-white border-l-[5px] md:border-l-[10px] border-slate-400 rounded-xl px-3 py-1.5 md:px-8 md:py-4 shadow-md text-center flex-1 max-w-[200px] md:max-w-[380px] relative">
+                                         <div class="absolute top-2 right-2 text-slate-400 text-xs md:text-2xl"><i class="fa-solid fa-user"></i></div>
+                                         <div class="mb-1 md:mb-2"><span class="text-[8px] md:text-sm text-slate-700 font-black bg-slate-100 px-2 py-0.5 rounded-full">活動業務</span></div>
+                                         <span class="text-[8px] md:text-lg text-slate-700 font-black block leading-none">幹事</span>
+                                         <div class="text-sm md:text-3xl font-black text-slate-850 mt-1 md:mt-2">{{ orgChartData.officer1 }}</div>
+                                     </div>
+                                     
+                                     <div class="bg-white border-l-[5px] md:border-l-[10px] border-slate-400 rounded-xl px-3 py-1.5 md:px-8 md:py-4 shadow-md text-center flex-1 max-w-[200px] md:max-w-[380px] relative">
+                                         <div class="absolute top-2 right-2 text-slate-400 text-xs md:text-2xl"><i class="fa-solid fa-user"></i></div>
+                                         <div class="mb-1 md:mb-2"><span class="text-[8px] md:text-sm text-slate-700 font-black bg-slate-100 px-2 py-0.5 rounded-full">行政業務</span></div>
+                                         <span class="text-[8px] md:text-lg text-slate-700 font-black block leading-none">助理幹事</span>
+                                         <div class="text-sm md:text-3xl font-black text-slate-850 mt-1 md:mt-2">{{ orgChartData.officer2 }}</div>
+                                     </div>
+                                 </div>
+
+                                 <!-- 向下微型箭頭 -->
+                                 <i class="fa-solid fa-arrow-down text-slate-200 text-[10px] md:text-base shrink-0"></i>
+
+                                 <!-- 第四排：三個小隊 -->
+                                 <div class="grid grid-cols-3 gap-2 md:gap-6 w-full px-1 flex-1 min-h-0 max-w-4xl">
+                                     <div v-for="squad in orgChartData.squads" :key="squad.name" class="bg-white rounded-xl md:rounded-2xl shadow-md overflow-hidden flex flex-col border border-slate-200 h-full">
+                                         <!-- 小隊標頭 -->
+                                         <div class="bg-slate-800 text-white text-center py-1 md:py-2 shrink-0">
+                                             <span class="text-[7px] md:text-xs text-slate-300 font-bold bg-slate-700/50 px-1.5 py-0.5 rounded-full block w-fit mx-auto mb-0.5">小隊管理</span>
+                                             <div class="text-[10px] md:text-xl font-black tracking-wide">{{ squad.name }}</div>
+                                         </div>
+                                         
+                                         <!-- 小隊長 -->
+                                         <div class="p-1 md:p-3 text-center border-b border-slate-100 bg-white shrink-0">
+                                             <span class="text-[7px] md:text-[11px] text-slate-400 font-semibold block leading-none mb-1">小隊長</span>
+                                             <div class="text-sm md:text-3xl font-black text-slate-800 tracking-wider">{{ squad.leader }}</div>
+                                         </div>
+
+                                         <!-- 內容主區塊 (副小隊長與隊員均採黑色字體) -->
+                                         <div class="flex-1 overflow-y-auto custom-scrollbar p-1 md:p-3 flex flex-col justify-start bg-slate-50/30 gap-1.5">
+                                             <!-- 獨立：副小隊長 (調整為 Slate-800 黑色) -->
+                                             <div class="shrink-0 flex flex-col items-center">
+                                                 <span class="text-[7px] md:text-[11px] text-slate-400 font-bold mb-1 block">副小隊長</span>
+                                                 <div v-for="subL in squad.subLeaders" :key="subL" class="text-[10px] md:text-2xl font-black text-slate-800 tracking-wide">
+                                                     {{ subL }}
+                                                 </div>
+                                                 <div v-if="!squad.subLeaders.length" class="text-[8px] md:text-sm text-slate-300">無</div>
+                                             </div>
+
+                                             <div class="w-full h-[1px] bg-slate-150 border-t border-dashed border-slate-200 my-0.5 shrink-0"></div>
+
+                                             <!-- 獨立：隊員清單 -->
+                                             <div class="flex-1 flex flex-col items-center">
+                                                 <span class="text-[7px] md:text-[11px] text-slate-400 font-bold mb-1 block">隊員</span>
+                                                 <div class="flex flex-col gap-0.5 md:gap-1 w-full items-center">
+                                                     <div v-for="name in squad.members" :key="name" class="text-[9px] md:text-2xl font-bold text-slate-600 tracking-wide">
+                                                         {{ name }}
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+
+                             </div>
+                         </div>
+                     </div>
                     <!-- Slide 11: 過場 03 政令宣達 -->
                     <div class="swiper-slide px-0 relative w-full h-full overflow-hidden bg-white">
                         <div class="absolute inset-0 bg-grid-slate opacity-50"></div>
@@ -1347,6 +1475,19 @@
     createApp({
         setup() {
             const activeTab = ref('training'); 
+const assistanceRecords = ref([]);
+
+// 輔助函式：計算 "17:00" 到 "21:00" 的時數差（支援跨子夜班表）
+const getHoursBetween = (start, end) => {
+    if (!start || !end) return 0;
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    let diffMinutes = (eh * 60 + em) - (sh * 60 + sm);
+    if (diffMinutes < 0) {
+        diffMinutes += 24 * 60; // 跨天班表補足 24 小時
+    }
+    return Math.round((diffMinutes / 60) * 10) / 10; // 保留小數點後一位
+};
             const trainingStep = ref('list');
 // 在 setup() 內部找到約 560 行處
 const currentRealYear = new Date().getFullYear(); 
@@ -1366,7 +1507,27 @@ const availableYears = computed(() => {
     return years;
 });
 
-
+const loadAssistanceRecords = async () => {
+    try {
+        const yearPrefix = selectedYear.value; // 例如 "2026"
+        const startRange = `${yearPrefix}-01-01`;
+        const endRange = `${yearPrefix}-12-31`;
+        
+        const q = query(
+            collection(db, "assistance_records"),
+            where("date", ">=", startRange),
+            where("date", "<=", endRange)
+        );
+        const querySnapshot = await getDocs(q);
+        const records = [];
+        querySnapshot.forEach(docSnap => {
+            records.push(docSnap.data());
+        });
+        assistanceRecords.value = records;
+    } catch (err) {
+        console.error("載入協勤紀錄失敗:", err);
+    }
+};
 
 // --- 左右滑動切換分頁邏輯 ---
             const tabsOrder = ['training', 'manual', 'skill', 'medication'];
@@ -1425,6 +1586,59 @@ const availableYears = computed(() => {
                 if (m % 2 !== 0) return ""; // 奇數月不慶生
                 return `${m - 1}-${m}月`;
             });
+
+// ===== 組織分布圖資料 computed (拆分副小隊長與隊員) =====
+            const orgChartData = computed(() => {
+                const members = membersList.value;
+                if (!members.length) return { squads: [] };
+
+                const getByTitle = (title) => members.filter(m => m.duty_title === title);
+                const getByGroupAndTitle = (group, title) => members.filter(m => m.duty_group === group && m.duty_title === title);
+                
+                // 獨立抓取副小隊長
+                const getSquadSubLeaders = (group) => members
+                    .filter(m => m.duty_group === group && m.duty_title === '副小隊長')
+                    .map(m => m.姓名);
+
+                // 獨立抓取隊員
+                const getSquadMembersOnly = (group) => members
+                    .filter(m => m.duty_group === group && m.duty_title === '隊員')
+                    .map(m => m.姓名);
+
+                const deputyChiefs = getByTitle('副分隊長');
+                const officers = getByTitle('幹事');
+                const assistantOfficers = getByTitle('助理幹事');
+
+                return {
+                    coordinator: '林健煌',
+                    chief: getByTitle('分隊長')[0]?.姓名 || '從缺',
+                    deputy1: deputyChiefs[0]?.姓名 || '從缺', 
+                    deputy2: deputyChiefs[1]?.姓名 || '從缺', 
+                    officer1: officers[0]?.姓名 || '從缺',    
+                    officer2: assistantOfficers[0]?.姓名 || '從缺', 
+                    squads: [
+                        {
+                            name: '第一小隊',
+                            leader: getByGroupAndTitle('第一小隊', '小隊長')[0]?.姓名 || '從缺',
+                            subLeaders: getSquadSubLeaders('第一小隊'),
+                            members: getSquadMembersOnly('第一小隊')
+                        },
+                        {
+                            name: '第二小隊',
+                            leader: getByGroupAndTitle('第二小隊', '小隊長')[0]?.姓名 || '從缺',
+                            subLeaders: getSquadSubLeaders('第二小隊'),
+                            members: getSquadMembersOnly('第二小隊')
+                        },
+                        {
+                            name: '第三小隊',
+                            leader: getByGroupAndTitle('第三小隊', '小隊長')[0]?.姓名 || '從缺',
+                            subLeaders: getSquadSubLeaders('第三小隊'),
+                            members: getSquadMembersOnly('第三小隊')
+                        }
+                    ]
+                };
+            });
+
 
             // 新增：自動過濾壽星名單 (防時區偏移版)
 const pptBirthdays = computed(() => {
@@ -1514,35 +1728,56 @@ const toggleSection = (name) => {
 
             // 時數統計
             const processedDutyStats = computed(() => {
-                if (!membersList.value.length) return [];
-                const list = [...membersList.value];
-                list.sort((a, b) => {
-                    const gpA = groupPriority[a.duty_group] || 99;
-                    const gpB = groupPriority[b.duty_group] || 99;
-                    if (gpA !== gpB) return gpA - gpB;
-                    const tpA = titlePriority[a.duty_title] || 99;
-                    const tpB = titlePriority[b.duty_title] || 99;
-                    if (tpA !== tpB) return tpA - tpB;
-                    return a.姓名.localeCompare(b.姓名, 'zh-TW');
-                });
-                return list.map(m => {
-                    let total = 0;
-                    const row = { name: m.姓名 };
-                    for (let i = 1; i <= 12; i++) {
-                        const mKey = `m${i}`;
-                        const monthStr = `${i}月`;
-                        if (m.leave_month && Array.isArray(m.leave_month) && m.leave_month.includes(monthStr)) {
-                            row[mKey] = '請假';
-                        } else {
-                            const hours = parseInt(m[mKey]) || 0;
-                            row[mKey] = hours;
-                            total += hours;
-                        }
-                    }
-                    row.total = total;
-                    return row;
-                });
-            });
+    if (!membersList.value.length) return [];
+    
+    // 建立一個對照表： 姓名 -> 月份(1-12) -> 時數加總
+    const hoursMap = {};
+    assistanceRecords.value.forEach(rec => {
+        const name = rec.userName;
+        const dateStr = rec.date; // 格式如 "2026-01-14"
+        if (!name || !dateStr) return;
+        
+        const parts = dateStr.split('-');
+        if (parts.length < 2) return;
+        const monthNum = parseInt(parts[1], 10); // 取得月份整數 (1-12)
+        
+        const hours = getHoursBetween(rec.shiftStart, rec.shiftEnd);
+        
+        if (!hoursMap[name]) hoursMap[name] = {};
+        if (!hoursMap[name][monthNum]) hoursMap[name][monthNum] = 0;
+        hoursMap[name][monthNum] += hours;
+    });
+
+    const list = [...membersList.value];
+    list.sort((a, b) => {
+        const gpA = groupPriority[a.duty_group] || 99;
+        const gpB = groupPriority[b.duty_group] || 99;
+        if (gpA !== gpB) return gpA - gpB;
+        const tpA = titlePriority[a.duty_title] || 99;
+        const tpB = titlePriority[b.duty_title] || 99;
+        if (tpA !== tpB) return tpA - tpB;
+        return a.姓名.localeCompare(b.姓名, 'zh-TW');
+    });
+
+    return list.map(m => {
+        let total = 0;
+        const row = { name: m.姓名 };
+        for (let i = 1; i <= 12; i++) {
+            const mKey = `m${i}`;
+            const monthStr = `${i}月`;
+            if (m.leave_month && Array.isArray(m.leave_month) && m.leave_month.includes(monthStr)) {
+                row[mKey] = '請假';
+            } else {
+                // 從對照表中取得該隊員在該月份的時數
+                const hours = (hoursMap[m.姓名] && hoursMap[m.姓名][i]) ? hoursMap[m.姓名][i] : 0;
+                row[mKey] = Math.round(hours * 10) / 10;
+                total += hours;
+            }
+        }
+        row.total = Math.round(total * 10) / 10;
+        return row;
+    });
+});
 
             const getCellClass = (val, mIdx) => {
                 const currentTrainingMonth = parseInt(selectedTraining.value?.id) || 1;
@@ -1715,8 +1950,9 @@ const loadTrainingData = async () => {
 
 
 const changeYear = () => {
-    trainingStep.value = 'list'; // 切換年份時回到列表頁
-    loadTrainingData(); // 重新抓資料
+    trainingStep.value = 'list';
+    loadTrainingData();
+    loadAssistanceRecords(); // <-- 新增此行
 };
 
             const openTrainingDetail = (item) => {
@@ -1859,10 +2095,11 @@ const onSliderScroll = (e) => {
             const isPdfLoading = ref(false);
             const pdfError = ref(false);
 
-            onMounted(() => {
+          onMounted(() => {
     loadMembers();
     loadTrainingData();
-    loadPdf(); // <--- 網頁一打開就直接開始下載預載
+    loadAssistanceRecords(); // <-- 新增此行
+    loadPdf();
 });
 
             return {
@@ -1874,7 +2111,7 @@ const onSliderScroll = (e) => {
                 pptMonth, coverHexagons, pptBirthdays, pptBirthdayRange, onSliderScroll,isNotCurrentYear, 
                 pptTeamItems, pptPolicyItems, pptAdhocItems,loadPdf,selectedYear,availableYears,
     changeYear,openSections,handleTouchStart,
-                handleTouchEnd,isCandleBlown, blowCandle,
+                handleTouchEnd,isCandleBlown, blowCandle,orgChartData,loadAssistanceRecords,
     toggleSection,
                 detailTeamSummary, detailPolicySummary, detailAdhocSummary,
                 isAwardOpen, awardData, showAward, closeAward,
