@@ -1430,7 +1430,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     const firebaseConfig = {
         apiKey: "AIzaSyCzXANY8mkN8BzsGr0SDvGLW_AJ43kRQ1Q",
         authDomain: "star-c5e91.firebaseapp.com",
@@ -1444,7 +1444,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const storage = getStorage(app);
-
+const auth = getAuth(app);
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     const { createApp, ref, computed, nextTick, onMounted, watch } = Vue;
@@ -2095,11 +2095,20 @@ const onSliderScroll = (e) => {
             const isPdfLoading = ref(false);
             const pdfError = ref(false);
 
-          onMounted(() => {
-    loadMembers();
-    loadTrainingData();
-    loadAssistanceRecords(); // <-- 新增此行
-    loadPdf();
+        onMounted(() => {
+    // 👇 讓 iframe 自動監聽是否已經有登入狀態
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            // ✅ 確定抓到 Firebase 登入狀態後，才去抓資料庫 (這樣才不會被規則擋下來)
+            loadMembers();
+            loadTrainingData();
+            loadAssistanceRecords();
+            loadPdf();
+        } else {
+            console.warn("Iframe 尚未取得登入授權");
+            // 這裡可以做一個防呆，如果真的沒登入，就顯示「請先登入」之類的畫面
+        }
+    });
 });
 
             return {
